@@ -64,5 +64,13 @@
   },
   "resolutions": {
     "@midnight-ntwrk/wallet-sdk": "1.2.0"
+  },
+  "allowScripts": {
+    "@swc/core@1.15.47": true,
+    "classic-level@3.0.0": true,
+    "esbuild@0.14.54": true,
+    "msgpackr-extract@3.0.4": true,
+    "protobufjs@7.6.5": true,
+    "ssh2@1.17.0": true
   }
 }

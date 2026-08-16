@@ -1,0 +1,42 @@
+pragma language_version 0.23;
+
+import CompactStandardLibrary;
+
+export enum State {
+  PENDING,
+  VERIFIED
+}
+
+export ledger state: State;
+export ledger tripId: Bytes<32>;
+export ledger verifiedBy: Bytes<32>;
+export ledger complianceStatus: Boolean;
+
+constructor() {
+  state = State.PENDING;
+  complianceStatus = false;
+}
+
+witness localSecretKey(): Bytes<32>;
+witness safetyConditionsMet(): Boolean;
+
+export circuit verifyTripCompliance(tripIdInput: Bytes<32>): [] {
+  assert(state == State.PENDING, "Trip already verified");
+  assert(safetyConditionsMet(), "Safety conditions not met, cannot verify trip");
+  tripId = disclose(tripIdInput);
+  verifiedBy = disclose(publicKey(localSecretKey(), tripIdInput));
+  complianceStatus = true;
+  state = State.VERIFIED;
+}
+
+export circuit resetTrip(): [] {
+  assert(state == State.VERIFIED, "No verified trip to reset");
+  state = State.PENDING;
+  tripId = default<Bytes<32>>;
+  verifiedBy = default<Bytes<32>>;
+  complianceStatus = false;
+}
+
+export circuit publicKey(sk: Bytes<32>, tripId: Bytes<32>): Bytes<32> {
+  return persistentHash<Vector<3, Bytes<32>>>([pad(32, "tripverify:pk:"), tripId, sk]);
+}

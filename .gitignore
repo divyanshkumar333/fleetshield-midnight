@@ -61,4 +61,9 @@ jspm_packages/
 managed/
 
 .claude
-.midnight-expert
+.midnight-expert*seed*.txt
+*private-key*
+*.pem
+
+dashboard/node_modules/
+dashboard/dist/

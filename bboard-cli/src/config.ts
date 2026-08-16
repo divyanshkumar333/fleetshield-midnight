@@ -14,11 +14,16 @@
 // limitations under the License.
 
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   EnvironmentConfiguration,
   getTestEnvironment,
   RemoteTestEnvironment,
   TestEnvironment,
+  NodeClient,
+  IndexerClient,
+  ProofServerClient,
+  FaucetClient,
 } from '@midnight-ntwrk/testkit-js';
 import { setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 import { Logger } from 'pino';
@@ -31,14 +36,14 @@ export interface Config {
   readonly generateDust: boolean;
 }
 
-export const currentDir = path.resolve(new URL(import.meta.url).pathname, '..');
+export const currentDir = path.resolve(fileURLToPath(import.meta.url), '..');
 
 export class StandaloneConfig implements Config {
   getEnvironment(logger: Logger): TestEnvironment {
     return getTestEnvironment(logger) as TestEnvironment;
   }
   privateStateStoreName = 'bboard-private-state';
-  logDir = path.resolve(currentDir, '..', 'logs', 'standalone', `${new Date().toISOString()}.log`);
+  logDir = path.resolve(currentDir, '..', 'logs', 'standalone', `${new Date().toISOString().replace(/:/g, '-')}.log`);
   zkConfigPath = path.resolve(currentDir, '..', '..', 'contract', 'src', 'managed', 'bboard');
   generateDust = false;
 }
@@ -49,7 +54,7 @@ export class PreviewRemoteConfig implements Config {
     return new PreviewTestEnvironment(logger);
   }
   privateStateStoreName = 'bboard-private-state';
-  logDir = path.resolve(currentDir, '..', 'logs', 'preview-remote', `${new Date().toISOString()}.log`);
+  logDir = path.resolve(currentDir, '..', 'logs', 'preview-remote', `${new Date().toISOString().replace(/:/g, '-')}.log`);
   zkConfigPath = path.resolve(currentDir, '..', '..', 'contract', 'src', 'managed', 'bboard');
   generateDust = true;
 }
@@ -60,7 +65,7 @@ export class PreprodRemoteConfig implements Config {
     return new PreprodTestEnvironment(logger);
   }
   privateStateStoreName = 'bboard-private-state';
-  logDir = path.resolve(currentDir, '..', 'logs', 'preprod-remote', `${new Date().toISOString()}.log`);
+  logDir = path.resolve(currentDir, '..', 'logs', 'preprod-remote', `${new Date().toISOString().replace(/:/g, '-')}.log`);
   zkConfigPath = path.resolve(currentDir, '..', '..', 'contract', 'src', 'managed', 'bboard');
   generateDust = true;
 }
@@ -68,6 +73,21 @@ export class PreprodRemoteConfig implements Config {
 export class PreviewTestEnvironment extends RemoteTestEnvironment {
   constructor(logger: Logger) {
     super(logger);
+  }
+
+  override healthCheck = async (): Promise<void> => {
+    const config = this.getEnvironmentConfiguration();
+    this.logger.info('Performing env health check');
+    await new NodeClient(config.node, this.logger).health();
+    await new IndexerClient(config.indexer, this.logger).health();
+    await new ProofServerClient(config.proofServer, this.logger).health();
+    if (config.faucet) {
+      try {
+        await new FaucetClient(config.faucet, this.logger).health();
+      } catch (error) {
+        this.logger.warn(`Faucet health-check failed, but continuing. You may need to fund manually via the faucet website. Error: ${error}`);
+      }
+    }
   }
 
   private getProofServerUrl(): string {
@@ -95,6 +115,21 @@ export class PreviewTestEnvironment extends RemoteTestEnvironment {
 export class PreprodTestEnvironment extends RemoteTestEnvironment {
   constructor(logger: Logger) {
     super(logger);
+  }
+
+  override healthCheck = async (): Promise<void> => {
+    const config = this.getEnvironmentConfiguration();
+    this.logger.info('Performing env health check');
+    await new NodeClient(config.node, this.logger).health();
+    await new IndexerClient(config.indexer, this.logger).health();
+    await new ProofServerClient(config.proofServer, this.logger).health();
+    if (config.faucet) {
+      try {
+        await new FaucetClient(config.faucet, this.logger).health();
+      } catch (error) {
+        this.logger.warn(`Faucet health-check failed, but continuing. You may need to fund manually via the faucet website. Error: ${error}`);
+      }
+    }
   }
 
   private getProofServerUrl(): string {
