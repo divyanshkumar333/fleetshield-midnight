@@ -8,6 +8,8 @@ const port = 4000;
 app.use(cors());
 app.use(express.json());
 
+app.get('/health', (req, res) => res.json({ status: 'ok' }));
+
 // A simple string-to-bytes utility for the demo if needed, 
 // but tripId can just be padded to 32 bytes
 function to32Bytes(str: string): Uint8Array {
