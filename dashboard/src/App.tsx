@@ -1190,85 +1190,79 @@ ${receipt.rejectionReason ? `Rejection Reason: ${receipt.rejectionReason}` : ''}
       <header className="app-header">
         <div className="header-brand">
           <div className="brand-logo">
-            <Shield size={18} color="var(--accent)" />
-            FLEETSHIELD
+            <Shield size={16} color="var(--accent)" />
+            <span style={{ letterSpacing: '0.06em', fontWeight: 700, fontSize: 'var(--fs-base)' }}>FLEETSHIELD</span>
           </div>
 
+          <div className="header-divider hide-on-mobile" />
+
           {/* Operator Modes Navigation */}
-          <div className="side-panel-tabs hide-on-mobile" style={{ border: 'none', background: 'transparent', marginLeft: '1rem' }}>
-            <div className={`sp-tab ${activeTab === 'OPERATIONS' ? 'active' : ''}`} onClick={() => setActiveTab('OPERATIONS')}>
-              OPERATIONS
-            </div>
-            <div className={`sp-tab ${activeTab === 'COMPLIANCE' ? 'active' : ''}`} onClick={() => setActiveTab('COMPLIANCE')}>
-              COMPLIANCE
-            </div>
-            <div className={`sp-tab ${activeTab === 'PRIVACY_AUDIT' ? 'active' : ''}`} onClick={() => setActiveTab('PRIVACY_AUDIT')}>
-              PRIVACY AUDIT
-            </div>
-          </div>
+          <nav className="header-nav hide-on-mobile">
+            <div className={`nav-item ${activeTab === 'OPERATIONS' ? 'active' : ''}`} onClick={() => setActiveTab('OPERATIONS')}>Operations</div>
+            <div className={`nav-item ${activeTab === 'COMPLIANCE' ? 'active' : ''}`} onClick={() => setActiveTab('COMPLIANCE')}>Compliance</div>
+            <div className={`nav-item ${activeTab === 'PRIVACY_AUDIT' ? 'active' : ''}`} onClick={() => setActiveTab('PRIVACY_AUDIT')}>Privacy Audit</div>
+          </nav>
         </div>
         
         <div className="header-actions-group">
-          {/* Smart Demo Mode Switcher */}
+          {/* Demo scenarios */}
           <div className="demo-bar hide-on-mobile">
-            <span style={{ fontSize: '0.625rem', fontWeight: 700, color: 'var(--accent)', letterSpacing: '0.05em', marginRight: '0.25rem' }}>DEMO:</span>
-            <button className={`demo-chip ${demoScenario === 'COMPLIANT' ? 'active' : ''}`} onClick={() => handleTriggerDemoScenario('COMPLIANT')}>
-              1. Compliant Trip
-            </button>
-            <button className={`demo-chip ${demoScenario === 'HIGH_RISK' ? 'active' : ''}`} onClick={() => handleTriggerDemoScenario('HIGH_RISK')}>
-              2. High-Risk Trip
-            </button>
-            <button className={`demo-chip ${demoScenario === 'REJECTED' ? 'active' : ''}`} onClick={() => handleTriggerDemoScenario('REJECTED')}>
-              3. Rejected ZK
-            </button>
+            <button className={`demo-chip ${demoScenario === 'COMPLIANT' ? 'active' : ''}`} onClick={() => handleTriggerDemoScenario('COMPLIANT')}>Compliant</button>
+            <button className={`demo-chip ${demoScenario === 'HIGH_RISK' ? 'active' : ''}`} onClick={() => handleTriggerDemoScenario('HIGH_RISK')}>High Risk</button>
+            <button className={`demo-chip ${demoScenario === 'REJECTED' ? 'active' : ''}`} onClick={() => handleTriggerDemoScenario('REJECTED')}>Rejected ZK</button>
           </div>
 
-          {/* Presentation Mode Toggle */}
-          <button 
-            className={`search-trigger ${presentationMode ? 'active' : ''}`} 
-            onClick={() => setPresentationMode(v => !v)}
-            title="Toggle simplified Presentation Mode"
-            style={{ borderColor: presentationMode ? 'var(--accent)' : 'var(--border)' }}
-          >
-            <Tv size={14} color={presentationMode ? 'var(--accent)' : 'var(--text-secondary)'} />
-            <span className="hide-on-mobile">{presentationMode ? 'Pres Mode ON' : 'Pres Mode'}</span>
-          </button>
-          
+          <div className="header-divider hide-on-mobile" />
+
+          {/* Sim controls */}
           <div className="sim-controls hide-on-mobile">
-            <span className="sim-time">{simulationTime.toLocaleTimeString([], { weekday: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+            <span className="sim-time">{simulationTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
             <div className="sim-btn-group">
-              <button className={`sim-btn ${simulationSpeed === 0 ? 'active' : ''}`} onClick={() => setSimulationSpeed(0)}><Pause size={12} /></button>
+              <button className={`sim-btn ${simulationSpeed === 0 ? 'active' : ''}`} onClick={() => setSimulationSpeed(0)}><Pause size={10} /></button>
               <button className={`sim-btn ${simulationSpeed === 1 ? 'active' : ''}`} onClick={() => setSimulationSpeed(1)}>1×</button>
               <button className={`sim-btn ${simulationSpeed === 5 ? 'active' : ''}`} onClick={() => setSimulationSpeed(5)}>5×</button>
               <button className={`sim-btn ${simulationSpeed === 10 ? 'active' : ''}`} onClick={() => setSimulationSpeed(10)}>10×</button>
             </div>
           </div>
 
-          {/* Live vs Sim indicators */}
-          <span className="chip chip-sim hide-on-mobile">SIMULATION</span>
-          <span className="chip chip-live hide-on-mobile">LIVE MIDNIGHT ZK</span>
+          <div className="header-divider hide-on-mobile" />
 
-          <button className="search-trigger" onClick={() => setCmdPaletteOpen(true)}>
-            <Search size={14} /> <span className="hide-on-mobile">Search...</span> <span className="kbd hide-on-mobile">Ctrl+K</span>
+          {/* Runtime indicators */}
+          <span className="chip chip-sim hide-on-mobile">Simulation</span>
+          <span className="chip chip-live hide-on-mobile">Live ZK</span>
+
+          {/* Presentation Mode */}
+          <button 
+            className={`search-trigger ${presentationMode ? 'active' : ''}`} 
+            onClick={() => setPresentationMode(v => !v)}
+            title="Presentation Mode"
+          >
+            <Tv size={13} />
+            <span className="hide-on-mobile">{presentationMode ? 'Presenting' : 'Present'}</span>
+          </button>
+
+          <button className="search-trigger hide-on-mobile" onClick={() => setCmdPaletteOpen(true)}>
+            <Search size={13} />
+            <span>Search</span>
+            <span className="kbd">⌘K</span>
           </button>
           
           <div style={{ position: 'relative' }}>
             <button className="notification-trigger" onClick={() => setNotificationsOpen(v => !v)}>
-              <Bell size={16} />
+              <Bell size={15} />
               <span className="badge-count">3</span>
             </button>
-            
             {notificationsOpen && (
               <div className="notifications-dropdown">
                 <div className="notif-header">
-                  <span className="notif-title">Notifications</span>
-                  <button className="notif-clear">Mark all read</button>
+                  <span className="notif-title">Alerts</span>
+                  <button className="notif-clear">Clear all</button>
                 </div>
                 <div className="notif-list">
                   {notifications.map(n => (
                     <div key={n.id} className="notif-item">
                       <div className="notif-icon">
-                        {n.type === 'alert' ? <ShieldAlert size={14} color="var(--status-crit)" /> : <Activity size={14} color="var(--accent)" />}
+                        {n.type === 'alert' ? <ShieldAlert size={13} color="var(--crit)" /> : <Activity size={13} color="var(--accent)" />}
                       </div>
                       <div className="notif-content">
                         <div className="notif-item-title">{n.title}</div>
@@ -1282,15 +1276,17 @@ ${receipt.rejectionReason ? `Rejection Reason: ${receipt.rejectionReason}` : ''}
             )}
           </div>
 
+          <div className="header-divider hide-on-mobile" />
+
           <div className="header-status hide-on-mobile">
-            <div className="global-status">
-              <div className={`status-indicator ${backendStatus}`}></div>
-              {backendStatus === 'ready' ? 'ONLINE' : (backendStatus === 'connecting' ? 'CONNECTING' : 'OFFLINE')}
-            </div>
+            <div className={`status-indicator ${backendStatus}`} />
+            <span style={{ fontSize: 'var(--fs-xs)', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--text-3)' }}>
+              {backendStatus === 'ready' ? 'Online' : backendStatus === 'connecting' ? 'Connecting' : 'Offline'}
+            </span>
           </div>
           
           <button className="notification-trigger show-on-mobile-only" onClick={() => setMobileMenuOpen(v => !v)}>
-            <Menu size={18} />
+            <Menu size={17} />
           </button>
         </div>
       </header>
