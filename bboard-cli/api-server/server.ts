@@ -3,7 +3,7 @@ import cors from 'cors';
 import { initTripVerifyService } from '../src/tripverify-service.js';
 
 const app = express();
-const port = 4000;
+const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 4000;
 
 app.use(cors());
 app.use(express.json());

@@ -64,6 +64,7 @@ interface Props {
   onSelectDriver: (id: string | null) => void;
   onVerify: (driver: DriverSimulation) => void;
   isVisible: boolean;
+  incidents?: any[];
 }
 
 type MapMode = 'NORMAL' | 'TRAFFIC' | 'RISK';
@@ -356,7 +357,7 @@ function MapRefCapture({ mapRef }: { mapRef: React.MutableRefObject<L.Map | null
 }
 
 export default function OperationsMap({
-  driverLocations, activeDriverId, status, txHash, errorMsg, simulationTime, onSelectDriver, onVerify, isVisible,
+  driverLocations, activeDriverId, status, txHash, errorMsg, simulationTime, onSelectDriver, onVerify, isVisible, incidents = [],
 }: Props) {
   const mapRef = useRef<L.Map | null>(null);
   const [satellite, setSatellite] = useState(false);
@@ -558,6 +559,40 @@ export default function OperationsMap({
               <Popup>
                 <div className="popup-driver-name">{d.name}</div>
                 <div className="popup-score">{d.id} · Score {d.score}</div>
+              </Popup>
+            </Marker>
+          );
+        })}
+
+        {/* Accident Markers */}
+        {incidents.filter(inc => inc.type === 'ACCIDENT').map(inc => {
+          const d = driverLocations.find(drv => drv.id === inc.vehicleId);
+          if (!d || !Number.isFinite(d.currentLat) || d.currentLat === 0) return null;
+          return (
+            <Marker key={`acc-${inc.id}`} position={[d.currentLat, d.currentLng]} zIndexOffset={9999}
+              icon={L.divIcon({
+                className: '',
+                html: `<div style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(8,11,15,0.9);border:2px solid var(--crit);box-shadow:0 0 0 2px var(--crit),0 0 14px rgba(244,63,94,0.4);">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--crit)" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon>
+                          <line x1="12" y1="8" x2="12" y2="12"></line>
+                          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                      </div>`,
+                iconSize: [36, 36],
+                iconAnchor: [18, 18],
+              })}
+            >
+              <Popup className="accident-popup">
+                <div className="accident-tooltip-card">
+                  <div className="accident-tooltip-header">
+                    <AlertOctagon size={11} />
+                    <span>ACCIDENT</span>
+                  </div>
+                  <div className="accident-tooltip-title">{inc.vehicleId} · {inc.driverName}</div>
+                  <div className="accident-tooltip-desc">{inc.description}</div>
+                  <span className="accident-tooltip-pill">COMPLIANCE: PENDING</span>
+                </div>
               </Popup>
             </Marker>
           );

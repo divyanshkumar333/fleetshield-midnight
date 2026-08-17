@@ -1,85 +1,94 @@
 # FleetShield
 
-Privacy-preserving fleet compliance verification powered by Midnight zero-knowledge technology.
+Privacy-first fleet compliance and logistics operations powered by Midnight zero-knowledge technology.
 
-## Problem
+## What FleetShield does
 
-Fleet operators need to verify driver safety and compliance while avoiding unnecessary exposure of sensitive telemetry data to third parties, insurance providers, or public ledgers.
+Fleet operators and logistics companies often need to prove to third parties—such as insurers, regulators, or enterprise clients—that a delivery trip adhered to safety and compliance standards. However, sharing raw telemetry logs (like real-time GPS coordinates, continuous vehicle speeds, and driver behavior) creates serious privacy concerns and commercial data leaks.
 
-## Solution
+FleetShield addresses this by letting an operator verify a trip compliance claim using Midnight's zero-knowledge infrastructure without exposing the underlying private telemetry values. Instead of sharing sensitive location and speed records, FleetShield generates a ZK proof to verify compliance on-chain.
 
-FleetShield uses a Midnight Compact ZK contract to verify a compliance claim while keeping the underlying witness/telemetry data entirely private. Telemetry data stays local, and only a zero-knowledge proof proving compliance is submitted to the Midnight ledger.
+> **Note on Demo Data:** The surrounding fleet telemetry, vehicle movement, route calculations, driver roster, shipments, and financial settlement workflows are currently simulated in the frontend to demonstrate an end-to-end operational dashboard.
 
-## Architecture
+## Main features
+
+- **Live Fleet Operations Map:** Real-time tracking interface powered by Leaflet and OpenStreetMap.
+- **Real-Road OSRM Routing:** Actual road geometry routes calculated via Open Source Routing Machine (OSRM).
+- **Truck Movement Simulation:** Dynamic vehicle movement along realistic Indian highways (e.g., Delhi to Mumbai, Jaipur to Pune).
+- **Route Stops & Driver States:** Active monitoring of rest stops, vehicle speeds, and risk ratings.
+- **Shipment Management:** Full freight order tracking with priority levels, ETAs, and ZK compliance status.
+- **Driver & Fleet Roster:** Driver safety scores, vehicle rig assignments, and operational risk metrics.
+- **Midnight ZK Verification:** On-demand zero-knowledge proof generation proving trip compliance.
+- **Privacy Audit View:** Interactive visual representation of private vs. public data boundaries.
+- **Compliance Receipts:** Downloadable JSON ZK verification receipts with cryptographic proofs and replay verification.
+- **Incident Response & Investigation:** Contract traceback viewer to inspect failed ZK assertions.
+- **Automated Settlement Workflow:** Payout releases unlocked only upon verified ZK proofs.
+- **Accident & Insurance Simulation:** Visual accident alert triggers and verifiable ZK insurance claim filing.
+- **Demo / Presentation Mode:** One-click scenario presets (Compliant, Rejected ZK, Speeding, High Risk, Accident) for quick evaluation.
+- **Responsive Enterprise Dashboard:** Modern dark-mode interface optimized across desktop and mobile screens.
+
+## How Midnight is used
+
+FleetShield connects a web frontend to a local Express backend that interacts with a Midnight Compact smart contract:
 
 ```text
-React Dashboard
+Frontend (React Dashboard)
        ↓
-Express API
+Express API Server (/verify-trip)
        ↓
-Trip Verification Service
+Midnight Service Wrapper
        ↓
-Midnight Local Network
+Compact Contract (tripverify.compact)
        ↓
-Compact ZK Contract
+ZK Proof Generation & Ledger Execution
        ↓
-Proof + Ledger Transaction
+Verification Result & On-Chain Transaction Hash
 ```
 
-## Main Features
+- **Contract Location:** `contract/src/tripverify.compact`
+- **Primary Circuit:** `verifyTripCompliance`
 
-* Live fleet map
-* Driver safety scores
-* Risk classification
-* Driver selection
-* Privacy-preserving compliance verification
-* Midnight ZK proof generation
-* Valid compliance verification
-* Invalid compliance rejection
-* Transaction hash display
-* Backend health monitoring
-* Animated verification flow
+The Compact contract evaluates the compliance condition passed to it. If the safety conditions are satisfied, the contract executes cleanly, generating a ZK proof and submitting a valid transaction to the Midnight network. If the safety conditions are not met, the contract triggers an explicit assertion failure (`failed assert: Safety conditions not met`), preventing the invalid claim from being verified on-chain.
 
-## API Endpoints
+## What is real vs simulated
 
-**GET `/health`**
-Checks the health of the Express backend.
+To evaluate FleetShield fairly during testing, here is a transparent breakdown of what runs on real code versus what is simulated for demonstration purposes:
 
-**POST `/verify-trip`**
-Runs the Midnight ZK verification for a given trip.
+### Real
+- **Midnight Compact Contract:** Written in `.compact` and compiled for the Midnight runtime.
+- **ZK Proof & Verification Flow:** Full local execution of the Midnight proof server and node.
+- **API Endpoints:** Live Express server handling `/health` and `/verify-trip`.
+- **Valid Verification Execution:** Produces a real ZK proof and on-chain transaction hash from the local Midnight standalone node.
+- **Invalid Verification Handling:** Triggers a real contract assertion failure directly from the Compact circuit when compliance conditions fail.
 
-Request Format:
-```json
-{
-  "tripId": "MS-84921",
-  "safetyConditionsMet": true
-}
-```
+### Simulated
+- Vehicle GPS positions and real-time movement updates.
+- Fleet rosters, driver safety scores, and shipment ETAs.
+- Financial settlement payout amounts and carrier approvals.
+- Visual accident triggers and insurance claim filing UI.
+- Company analytics, KPIs, and operational activity feeds.
 
-- **Valid Behavior:** When `safetyConditionsMet` is `true`, the local ZK circuit evaluates successfully, submitting the proof to the network. Returns `{ "success": true, "txHash": "..." }`.
-- **Invalid Behavior:** When `safetyConditionsMet` is `false`, the local ZK circuit immediately fails its compliance assertion (`failed assert: Safety conditions not met`). The transaction is never broadcast to the network. Returns `{ "success": false, "error": "..." }`.
-
-## Local Setup
+## Running locally
 
 ### Prerequisites
-* Node.js
-* npm
-* Docker Desktop & Docker Engine (Required to run the standalone Midnight proof server and node environment)
+- **Node.js:** v18 or newer
+- **npm:** v9 or newer
+- **Docker Desktop:** Required to run the standalone Midnight proof server and local node container.
 
-### Backend
+### 1. Start the Backend API & Midnight Environment
 
-1. Start Docker Desktop and wait for the Docker Engine to initialize.
-2. In a new terminal, run:
+Ensure Docker Desktop is open and running, then execute:
 
 ```bash
 cd bboard-cli
 npm run start-api
 ```
-3. Wait 1-2 minutes for the environment to download, start, fund the test wallet, and deploy the `tripverify` contract. The backend is ready when you see: `Ready to verify trips.`
 
-### Frontend
+*Note: On initial startup, the backend automatically initializes the Docker standalone Midnight network, funds the test wallet, compiles the Compact contract, and deploys `tripverify.compact`. Wait until you see `Ready to verify trips.` in the terminal.*
 
-In a separate terminal, run:
+### 2. Start the Frontend Dashboard
+
+In a separate terminal window:
 
 ```bash
 cd dashboard
@@ -89,28 +98,17 @@ npm run dev
 
 Open `http://localhost:5173` in your browser.
 
-## Demo Instructions
+## Quick Demo Guide for Judges
 
-### Valid Case
-1. Select a compliant driver (e.g., **Vivek Jeet Patel** or **Daniel D'Souza**), or click the **Compliant** scenario chip in the header.
-2. In the Vehicle Intelligence panel, click **Run ZK Verification**.
-3. Observe the sequence:
-   * 1. Private Telemetry (DONE)
-   * 2. ZK Proof Generation (DONE)
-   * 3. Midnight On-Chain (DONE)
-   * 4. Compliance Result (DONE)
-   * On-chain transaction hash is confirmed and cryptographic ZK receipt is generated.
+1. **Test a Compliant Verification (Success Path):**
+   - In the top header bar, click the **Compliant** demo scenario chip (or select driver **Vivek Jeet Patel**).
+   - Click **Run ZK Verification** in the vehicle panel or **Verify ZK** in the Operations map drawer.
+   - Watch the ZK proof pipeline execute. A valid transaction hash will be generated, and a ZK compliance receipt will be logged.
 
-### Invalid Case
-1. Select a high-risk driver (e.g., **Divyansh Kumar**), or click the **Rejected ZK** scenario chip in the header.
-2. Click **Run ZK Verification**.
-3. Observe the sequence:
-   * 1. Private Telemetry (DONE)
-   * 2. ZK Proof Generation (DONE)
-   * 3. Midnight On-Chain (DONE)
-   * 4. Compliance Result (FAIL)
-   * The UI displays the Midnight contract assertion failure: `failed assert: Safety conditions not met`, and flags the compliance incident.
+2. **Test a Non-Compliant Verification (Failure Path):**
+   - Click the **Rejected ZK** scenario chip (or select high-risk driver **Divyansh Kumar**).
+   - Click **Run ZK Verification**.
+   - The Compact contract assertion will fail (`failed assert: Safety conditions not met`), triggering an incident alert in the dashboard without posting an invalid proof to the chain.
 
-## Deployment Status
-
-Due to a known Midnight Preview/PreProd indexer synchronization issue (tracked as sd#126) and intermittent Preview faucet downtime encountered during our build window, we were unable to complete wallet funding on the public testnet in time for submission. All core functionality — Compact contract compilation, ZK proof generation, on-chain-style transaction submission, and both valid/invalid compliance verification paths — is fully implemented and tested against Midnight's local standalone environment, which uses the identical contract, compiler (compactc 0.31.1), and proof server used on Preview/PreProd. We are prepared to redeploy to Preview/PreProd the moment network infrastructure stabilizes.
+3. **Inspect Privacy Boundaries:**
+   - Navigate to the **Privacy Audit** tab in the sidebar to inspect the data boundary between private telemetry and public ZK receipts.

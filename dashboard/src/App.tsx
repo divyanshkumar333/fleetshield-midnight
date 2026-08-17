@@ -9,7 +9,7 @@ import {
   Pause, Menu, X, Download,
   Copy, RotateCcw, Layers, Tv, AlertOctagon,
   LayoutDashboard, MapPin, Package, UserCheck, CreditCard, AlertTriangle,
-  Truck, Clock
+  Truck
 } from 'lucide-react';
 
 // Deterministic Master Logistics Corridor Data
@@ -1477,103 +1477,108 @@ function App() {
 
         {/* Dynamic Workspace View Router */}
         {activeView === 'OVERVIEW' && (
-          <div className="overview-workspace enter-fade-up">
-            <div className="overview-header">
+          <div className="overview-workspace enter-fade-up" data-workspace="overview" style={{ maxWidth: '1600px', margin: '0 auto', padding: '0 20px' }}>
+            <div className="overview-header" style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <h1 className="overview-title">Enterprise Logistics Command Center</h1>
-                <div className="overview-subtitle">FleetShield Privacy-First Operations · {activeRole} View</div>
+                <h1 className="overview-title" style={{ fontSize: '20px', fontWeight: 600, letterSpacing: '-0.01em', marginBottom: '4px' }}>Enterprise Logistics Command Center</h1>
+                <div className="overview-subtitle" style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>FleetShield Privacy-First Operations · {activeRole}</div>
               </div>
-              <span className="chip chip-sim">SIMULATION DATA</span>
+              <span className="chip chip-sim" style={{ alignSelf: 'center', padding: '4px 10px', fontSize: '11px', background: 'var(--accent-dim)', color: 'var(--accent)', border: '1px solid var(--accent-border)' }}>SIMULATION DATA</span>
             </div>
 
-            {/* KPI Cards Grid */}
-            <div className="kpi-grid">
-              <div className="kpi-card">
-                <div className="kpi-header">
-                  <span>ACTIVE RIGS</span>
-                  <Truck size={15} />
+            {/* KPI Cards Grid - Beautiful Compact Metrics Band (Small) */}
+            <div className="kpi-band" style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', 
+              gap: '12px',
+              marginBottom: '24px'
+            }}>
+              <div className="kpi-band-item" style={{ background: 'var(--surface-card)', padding: '16px', borderRadius: '10px', border: '1px solid var(--stroke-base)', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
+                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 500, letterSpacing: '0.05em' }}>
+                  ACTIVE RIGS
                 </div>
-                <div className="kpi-value">12</div>
-                <div className="kpi-subtext">4 Rigs Simulating Real Roads</div>
+                <div style={{ fontSize: '24px', fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1 }}>12</div>
               </div>
 
-              <div className="kpi-card">
-                <div className="kpi-header">
-                  <span>ACTIVE SHIPMENTS</span>
-                  <Package size={15} />
+              <div className="kpi-band-item" style={{ background: 'var(--surface-card)', padding: '16px', borderRadius: '10px', border: '1px solid var(--stroke-base)', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
+                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 500, letterSpacing: '0.05em' }}>
+                  SHIPMENTS
                 </div>
-                <div className="kpi-value">{shipments.length}</div>
-                <div className="kpi-subtext">Delhi · Jaipur · Gwalior · Indore</div>
+                <div style={{ fontSize: '24px', fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1 }}>{shipments.length}</div>
               </div>
 
-              <div className="kpi-card">
-                <div className="kpi-header">
-                  <span>ON-TIME RATE</span>
-                  <Clock size={15} />
+              <div className="kpi-band-item" style={{ background: 'var(--surface-card)', padding: '16px', borderRadius: '10px', border: '1px solid var(--stroke-base)', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
+                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 500, letterSpacing: '0.05em' }}>
+                  ON-TIME
                 </div>
-                <div className="kpi-value" style={{ color: 'var(--ok)' }}>94.2%</div>
-                <div className="kpi-subtext">+1.8% vs last week</div>
+                <div style={{ fontSize: '24px', fontWeight: 600, color: 'var(--ok)', lineHeight: 1 }}>94.2%</div>
               </div>
 
-              <div className="kpi-card">
-                <div className="kpi-header">
-                  <span>COMPLIANCE RATE</span>
-                  <ShieldCheck size={15} />
+              <div className="kpi-band-item" style={{ background: 'var(--surface-card)', padding: '16px', borderRadius: '10px', border: '1px solid var(--stroke-base)', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
+                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 500, letterSpacing: '0.05em' }}>
+                  COMPLIANCE
                 </div>
-                <div className="kpi-value" style={{ color: 'var(--accent)' }}>96.0%</div>
-                <div className="kpi-subtext">Midnight ZK Contract Verified</div>
+                <div style={{ fontSize: '24px', fontWeight: 600, color: 'var(--accent)', lineHeight: 1 }}>96.0%</div>
               </div>
 
-              <div className="kpi-card">
-                <div className="kpi-header">
-                  <span>PENDING VERIFICATION</span>
-                  <AlertTriangle size={15} />
+              <div className="kpi-band-item" style={{ background: 'var(--surface-card)', padding: '16px', borderRadius: '10px', border: '1px solid var(--stroke-base)', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
+                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 500, letterSpacing: '0.05em' }}>
+                  VERIFICATION
                 </div>
-                <div className="kpi-value" style={{ color: 'var(--warn)' }}>{pendingVerificationsCount}</div>
-                <div className="kpi-subtext">Awaiting ZK proof submission</div>
+                <div style={{ fontSize: '24px', fontWeight: 600, color: 'var(--warn)', lineHeight: 1 }}>{pendingVerificationsCount}</div>
               </div>
 
-              <div className="kpi-card">
-                <div className="kpi-header">
-                  <span>PENDING SETTLEMENT</span>
-                  <CreditCard size={15} />
+              <div className="kpi-band-item" style={{ background: 'var(--surface-card)', padding: '16px', borderRadius: '10px', border: '1px solid var(--stroke-base)', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
+                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 500, letterSpacing: '0.05em' }}>
+                  SETTLEMENT
                 </div>
-                <div className="kpi-value" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>
+                <div style={{ fontSize: '20px', fontWeight: 600, color: 'var(--accent)', fontFamily: 'var(--font-mono)', lineHeight: 1.2 }}>
                   ₹{pendingSettlementTotal.toLocaleString()}
                 </div>
-                <div className="kpi-subtext">{pendingSettlementsCount} Verified Payouts Ready</div>
               </div>
             </div>
 
-            {/* Overview Content Grid */}
-            <div className="overview-content-grid">
-              <div className="overview-panel">
-                <div className="overview-panel-title">
-                  <span>Active Shipments Queue</span>
-                  <button className="copy-btn-inline" onClick={() => setActiveView('SHIPMENTS')}>View All Shipments →</button>
+            {/* Primary Content Row */}
+            <div className="overview-primary-grid" style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
+              gap: '20px',
+              marginBottom: '20px'
+            }}>
+              <div className="overview-panel" style={{ background: 'var(--surface-card)', borderRadius: '12px', border: '1px solid var(--stroke-base)', padding: '20px', boxShadow: '0 2px 12px rgba(0,0,0,0.1)' }}>
+                <div className="overview-panel-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                  <span>ACTIVE SHIPMENTS</span>
+                  <button className="btn btn-secondary" onClick={() => setActiveView('SHIPMENTS')} style={{ padding: '3px 8px', fontSize: '11px' }}>View All →</button>
                 </div>
-                <div className="data-table">
-                  <div className="table-header" style={{ gridTemplateColumns: '1.2fr 1fr 1fr 1fr' }}>
+                <div className="data-table" style={{ overflowX: 'auto' }}>
+                  <div className="table-row hide-on-mobile" style={{ gridTemplateColumns: '1.2fr 1fr 1fr 1fr', paddingBottom: '10px', borderBottom: '1px solid var(--stroke-base)', color: 'var(--text-tertiary)', fontSize: '11px', fontWeight: 500, letterSpacing: '0.05em' }}>
                     <div>SHIPMENT / ROUTE</div>
                     <div>ASSIGNED RIG</div>
                     <div>STATUS</div>
-                    <div>COMPLIANCE</div>
+                    <div style={{ textAlign: 'right' }}>COMPLIANCE</div>
                   </div>
-                  {shipments.map(s => (
-                    <div key={s.id} className="table-row" style={{ gridTemplateColumns: '1.2fr 1fr 1fr 1fr' }}>
+                  {shipments.map((s, idx) => (
+                    <div key={s.id} className="table-row hover-subtle" style={{ 
+                      gridTemplateColumns: '1.2fr 1fr 1fr 1fr', 
+                      padding: '10px 0', 
+                      borderBottom: idx === shipments.length - 1 ? 'none' : '1px solid var(--stroke-base)', 
+                      alignItems: 'center',
+                      transition: 'background 200ms ease',
+                      animationDelay: `${idx * 50}ms`
+                    }}>
                       <div className="cell-entity">
-                        <span className="entity-name" style={{ fontFamily: 'var(--font-mono)' }}>{s.id}</span>
-                        <span className="entity-sub">{s.origin} → {s.destination}</span>
+                        <span className="entity-name" style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, fontSize: '12px', color: 'var(--text-primary)', marginBottom: '2px' }}>{s.id}</span>
+                        <span className="entity-sub" style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{s.origin} → {s.destination}</span>
                       </div>
                       <div className="cell-entity">
-                        <span className="entity-name">{s.driverName}</span>
-                        <span className="entity-sub">{s.vehicleId}</span>
+                        <span className="entity-name" style={{ fontSize: '12px', color: 'var(--text-primary)', marginBottom: '2px' }}>{s.driverName}</span>
+                        <span className="entity-sub" style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{s.vehicleId}</span>
                       </div>
                       <div className="cell-status">
-                        <span className="badge badge-ok">{s.status}</span>
+                        <span className="badge badge-ok" style={{ padding: '2px 6px', fontSize: '11px', fontWeight: 500 }}>{s.status}</span>
                       </div>
-                      <div className="cell-status">
-                        <span className={`badge ${s.complianceState === 'VERIFIED' ? 'badge-ok' : (s.complianceState === 'REJECTED' ? 'badge-crit' : 'badge-warn')}`}>
+                      <div className="cell-status" style={{ justifyContent: 'flex-end' }}>
+                        <span className={`badge ${s.complianceState === 'VERIFIED' ? 'badge-ok' : (s.complianceState === 'REJECTED' ? 'badge-crit' : 'badge-warn')}`} style={{ padding: '2px 6px', fontSize: '11px', fontWeight: 500 }}>
                           {s.complianceState}
                         </span>
                       </div>
@@ -1582,29 +1587,88 @@ function App() {
                 </div>
               </div>
 
-              <div className="overview-panel">
-                <div className="overview-panel-title">
-                  <span>Settlement Approval Queue</span>
-                  <button className="copy-btn-inline" onClick={() => setActiveView('SETTLEMENTS')}>Settlements →</button>
+              <div className="overview-panel" style={{ background: 'var(--surface-card)', borderRadius: '12px', border: '1px solid var(--stroke-base)', padding: '20px', boxShadow: '0 2px 12px rgba(0,0,0,0.1)' }}>
+                <div className="overview-panel-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                  <span>SETTLEMENTS</span>
+                  <button className="btn btn-secondary" onClick={() => setActiveView('SETTLEMENTS')} style={{ padding: '3px 8px', fontSize: '11px' }}>Queue →</button>
                 </div>
                 {shipments.filter(s => s.settlementStatus === 'READY_FOR_APPROVAL').length === 0 ? (
-                  <div className="table-empty">No settlements pending approval. Verify trip compliance to make payouts eligible.</div>
+                  <div className="table-empty" style={{ padding: '24px 20px', textAlign: 'center', color: 'var(--text-tertiary)', fontSize: '13px' }}>No settlements pending approval.</div>
                 ) : (
-                  shipments.filter(s => s.settlementStatus === 'READY_FOR_APPROVAL').map(s => (
-                    <div key={s.id} className="settlement-card" style={{ padding: '0.875rem' }}>
-                      <div className="shipment-card-header">
-                        <span className="shipment-id">{s.id}</span>
-                        <span className="settlement-amount">₹{s.payoutAmount.toLocaleString()}</span>
+                  shipments.filter(s => s.settlementStatus === 'READY_FOR_APPROVAL').map((s, idx) => (
+                    <div key={s.id} className="settlement-card" style={{ padding: '14px', background: 'var(--surface-elevated)', border: '1px solid var(--stroke-base)', borderRadius: '10px', marginBottom: '10px', animationDelay: `${idx * 50}ms` }}>
+                      <div className="shipment-card-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                        <span className="shipment-id" style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, fontSize: '13px', color: 'var(--text-primary)' }}>{s.id}</span>
+                        <span className="settlement-amount" style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent)', fontWeight: 600, fontSize: '14px' }}>₹{s.payoutAmount.toLocaleString()}</span>
                       </div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                      <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
                         {s.driverName} · {s.origin} → {s.destination}
                       </div>
-                      <button className="btn btn-primary" style={{ marginTop: '0.25rem' }} onClick={() => approveSettlement(s.id)}>
+                      <button className="btn btn-primary" style={{ width: '100%', padding: '8px', fontSize: '13px', fontWeight: 500, borderRadius: '6px' }} onClick={() => approveSettlement(s.id)}>
                         Approve Settlement
                       </button>
                     </div>
                   ))
                 )}
+              </div>
+            </div>
+
+            {/* Secondary Operational Row */}
+            <div className="overview-secondary-grid" style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
+              gap: '20px',
+              paddingBottom: '24px'
+            }}>
+              <div className="overview-panel" style={{ background: 'var(--surface-card)', borderRadius: '12px', border: '1px solid var(--stroke-base)', padding: '20px', boxShadow: '0 2px 12px rgba(0,0,0,0.1)' }}>
+                <div className="overview-panel-title" style={{ marginBottom: '16px', fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                  <span>RECENT ACTIVITY</span>
+                </div>
+                <div className="activity-list" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {activities.slice(0, 4).map((act, idx) => (
+                    <div key={act.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', paddingBottom: '10px', borderBottom: idx === Math.min(activities.length, 4) - 1 ? 'none' : '1px solid var(--stroke-base)', animationDelay: `${idx * 50}ms` }}>
+                      <div>
+                        <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-primary)', marginBottom: '2px' }}>{act.title}</div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{act.driverName} · {act.tripId}</div>
+                      </div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', whiteSpace: 'nowrap' }}>
+                        {Math.max(0, Math.round((Date.now() - act.timestamp.getTime()) / 60000))}m ago
+                      </div>
+                    </div>
+                  ))}
+                  {activities.length === 0 && (
+                    <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>No recent activity.</div>
+                  )}
+                </div>
+              </div>
+
+              <div className="overview-panel" style={{ background: 'var(--surface-card)', borderRadius: '12px', border: '1px solid var(--stroke-base)', padding: '20px', boxShadow: '0 2px 12px rgba(0,0,0,0.1)' }}>
+                <div className="overview-panel-title" style={{ marginBottom: '16px', fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                  <span>ATTENTION REQUIRED</span>
+                </div>
+                <div className="attention-list" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {pendingVerificationsCount > 0 && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px', background: 'var(--bg-warn-dim)', border: '1px solid var(--stroke-warn)', borderRadius: '8px' }}>
+                      <AlertTriangle size={16} color="var(--warn)" />
+                      <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--warn-text, var(--warn))' }}>{pendingVerificationsCount} Pending Verification{pendingVerificationsCount > 1 ? 's' : ''}</span>
+                    </div>
+                  )}
+                  {driverLocations.filter(d => d.risk === 'HIGH').length > 0 && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px', background: 'var(--bg-crit-dim)', border: '1px solid var(--stroke-crit)', borderRadius: '8px' }}>
+                      <ShieldAlert size={16} color="var(--crit)" />
+                      <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--crit-text, var(--crit))' }}>{driverLocations.filter(d => d.risk === 'HIGH').length} High-Risk Vehicle{driverLocations.filter(d => d.risk === 'HIGH').length > 1 ? 's' : ''}</span>
+                    </div>
+                  )}
+                  {incidents.filter(i => !i.resolved).length > 0 && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px', background: 'var(--bg-surface-hover, var(--surface))', border: '1px solid var(--stroke-base)', borderRadius: '8px' }}>
+                      <AlertOctagon size={16} color="var(--text-secondary)" />
+                      <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-primary)' }}>{incidents.filter(i => !i.resolved).length} Open Incident{incidents.filter(i => !i.resolved).length > 1 ? 's' : ''}</span>
+                    </div>
+                  )}
+                  {pendingVerificationsCount === 0 && driverLocations.filter(d => d.risk === 'HIGH').length === 0 && incidents.filter(i => !i.resolved).length === 0 && (
+                     <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>All systems operational. No items require attention.</div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -1654,25 +1718,25 @@ function App() {
                   </div>
 
                   <div className="shipment-meta-row">
-                    <span>Rig {s.vehicleId} · {s.driverName}</span>
-                    <span style={{ fontFamily: 'var(--font-mono)' }}>ETA {s.eta}</span>
+                    <span style={{ fontSize: '12px' }}>Rig {s.vehicleId} · {s.driverName}</span>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px' }}>ETA {s.eta}</span>
                   </div>
 
-                  <div className="trip-progress-box">
-                    <div className="progress-track">
+                  <div className="trip-progress-box" style={{ background: 'var(--ink-2)', padding: '12px', borderRadius: '8px' }}>
+                    <div className="progress-track" style={{ marginBottom: '8px' }}>
                       <div className="progress-fill" style={{ width: `${Math.round(s.progress * 100)}%` }} />
                     </div>
-                    <div className="progress-stats-row">
+                    <div className="progress-stats-row" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
                       <span>Progress: {Math.round(s.progress * 100)}%</span>
                       <span className="text-accent">{s.status}</span>
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--stroke-dim)', paddingTop: '0.75rem' }}>
-                    <span className={`badge ${s.complianceState === 'VERIFIED' ? 'badge-ok' : (s.complianceState === 'REJECTED' ? 'badge-crit' : 'badge-warn')}`}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--stroke-base)', paddingTop: '12px', marginTop: 'auto' }}>
+                    <span className={`badge ${s.complianceState === 'VERIFIED' ? 'badge-ok' : (s.complianceState === 'REJECTED' ? 'badge-crit' : 'badge-warn')}`} style={{ padding: '4px 8px', fontSize: '11px' }}>
                       ZK: {s.complianceState}
                     </span>
-                    <button className="btn btn-secondary" onClick={() => {
+                    <button className="btn btn-secondary" style={{ fontSize: '11px', padding: '4px 10px' }} onClick={() => {
                       const drv = driverLocations.find(d => d.id === s.vehicleId);
                       if (drv) {
                         setActiveDriverId(drv.id);
@@ -1699,10 +1763,10 @@ function App() {
               <span className="chip chip-live">LIVE MIDNIGHT ZK</span>
             </div>
 
-            <div className="detail-section" style={{ background: 'var(--ink-2)', padding: '1.25rem', borderRadius: '8px' }}>
-              <div className="detail-section-title">VERIFICATION AUDIT QUEUE</div>
-              <div className="data-table">
-                <div className="table-header" style={{ gridTemplateColumns: '1.5fr 1fr 1fr 1fr 1.2fr' }}>
+            <div className="glass-panel">
+              <div className="glass-panel-header">VERIFICATION AUDIT QUEUE</div>
+              <div className="data-table" style={{ overflowX: 'auto' }}>
+                <div className="table-row hide-on-mobile" style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 1fr 1.2fr', alignItems: 'center', paddingBottom: '10px', borderBottom: '1px solid var(--stroke-base)', color: 'var(--text-tertiary)', fontSize: '11px', fontWeight: 500, letterSpacing: '0.05em' }}>
                   <div>SHIPMENT / DRIVER</div>
                   <div>VEHICLE RIG</div>
                   <div>RESULT</div>
@@ -1710,25 +1774,25 @@ function App() {
                   <div style={{ textAlign: 'right' }}>ACTION</div>
                 </div>
 
-                {shipments.map(s => (
-                  <div key={s.id} className="table-row" style={{ gridTemplateColumns: '1.5fr 1fr 1fr 1fr 1.2fr' }}>
+                {shipments.map((s, idx) => (
+                  <div key={s.id} className="table-row hover-subtle" style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 1fr 1.2fr', alignItems: 'center', padding: '12px 0', borderBottom: idx === shipments.length - 1 ? 'none' : '1px solid var(--stroke-base)' }}>
                     <div className="cell-entity">
-                      <span className="entity-name">{s.driverName}</span>
-                      <span className="entity-sub">{s.id} · {s.origin} → {s.destination}</span>
+                      <span className="entity-name" style={{ fontSize: '13px', color: 'var(--text-primary)', marginBottom: '2px' }}>{s.driverName}</span>
+                      <span className="entity-sub" style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{s.id} · {s.origin} → {s.destination}</span>
                     </div>
                     <div className="cell-entity">
-                      <span className="entity-name">{s.vehicleId}</span>
+                      <span className="entity-name" style={{ fontSize: '12px', color: 'var(--text-primary)' }}>{s.vehicleId}</span>
                     </div>
                     <div className="cell-status">
-                      <span className={`badge ${s.complianceState === 'VERIFIED' ? 'badge-ok' : (s.complianceState === 'REJECTED' ? 'badge-crit' : 'badge-warn')}`}>
+                      <span className={`badge ${s.complianceState === 'VERIFIED' ? 'badge-ok' : (s.complianceState === 'REJECTED' ? 'badge-crit' : 'badge-warn')}`} style={{ padding: '2px 6px', fontSize: '11px', fontWeight: 500 }}>
                         {s.complianceState}
                       </span>
                     </div>
-                    <div className="cell-metric" style={{ textAlign: 'left' }}>
+                    <div className="cell-metric" style={{ textAlign: 'left', fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--text-secondary)' }}>
                       {s.txHash ? `${s.txHash.substring(0, 14)}...` : 'Pending Proof'}
                     </div>
                     <div className="cell-metric" style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                      <button className="btn btn-secondary" onClick={() => {
+                      <button className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: '11px' }} onClick={() => {
                         const drv = driverLocations.find(d => d.id === s.vehicleId);
                         if (drv) {
                           setActiveDriverId(drv.id);
@@ -1768,16 +1832,16 @@ function App() {
                     <span className="settlement-amount">₹{s.payoutAmount.toLocaleString()}</span>
                   </div>
 
-                  <div style={{ fontSize: '0.8125rem', color: 'var(--text-primary)', fontWeight: 500 }}>
-                    {s.driverName} ({s.vehicleId})
+                  <div style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: 500 }}>
+                    {s.driverName} <span style={{ color: 'var(--text-tertiary)', fontWeight: 400 }}>({s.vehicleId})</span>
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                    Route: {s.origin} → {s.destination}
+                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                    {s.origin} → {s.destination}
                   </div>
 
-                  <div className="shipment-meta-row" style={{ borderTop: '1px solid var(--stroke-dim)', paddingTop: '0.625rem' }}>
-                    <span>Midnight ZK:</span>
-                    <span className={`badge ${s.complianceState === 'VERIFIED' ? 'badge-ok' : 'badge-warn'}`}>{s.complianceState}</span>
+                  <div className="shipment-meta-row" style={{ borderTop: '1px solid var(--stroke-base)', paddingTop: '12px', marginTop: 'auto' }}>
+                    <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>Midnight ZK:</span>
+                    <span className={`badge ${s.complianceState === 'VERIFIED' ? 'badge-ok' : 'badge-warn'}`} style={{ fontSize: '11px', padding: '2px 6px' }}>{s.complianceState}</span>
                   </div>
 
                   <div className="shipment-meta-row">
@@ -1831,18 +1895,18 @@ function App() {
                   </div>
 
                   <div className="shipment-meta-row">
-                    <span>Rig Identifier:</span>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--text-1)' }}>{d.id}</span>
+                    <span style={{ fontSize: '12px' }}>Rig Identifier:</span>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--text-1)', fontSize: '12px' }}>{d.id}</span>
                   </div>
 
                   <div className="shipment-meta-row">
-                    <span>Driver Safety Score:</span>
-                    <span style={{ fontWeight: 700, color: d.score < 50 ? 'var(--crit)' : 'var(--ok)' }}>{d.score} / 100</span>
+                    <span style={{ fontSize: '12px' }}>Driver Safety Score:</span>
+                    <span style={{ fontWeight: 700, fontSize: '12px', color: d.score < 50 ? 'var(--crit)' : 'var(--ok)' }}>{d.score} / 100</span>
                   </div>
 
                   <div className="shipment-meta-row">
-                    <span>Active Status:</span>
-                    <span className="text-accent" style={{ fontWeight: 600 }}>{d.driverStatus}</span>
+                    <span style={{ fontSize: '12px' }}>Active Status:</span>
+                    <span className="text-accent" style={{ fontWeight: 600, fontSize: '12px' }}>{d.driverStatus}</span>
                   </div>
 
                   <button className="btn btn-secondary" style={{ marginTop: '0.5rem' }} onClick={() => {
@@ -1859,11 +1923,11 @@ function App() {
 
         {activeView === 'PRIVACY_AUDIT' && (
           <div className="workspace-container enter-fade-up">
-            <div className="privacy-banner-statement" style={{ backgroundColor: 'var(--ink-2)', borderLeft: '4px solid var(--accent)', padding: '1.25rem' }}>
-              <div style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-1)', marginBottom: '0.375rem' }}>
+            <div className="privacy-banner-statement" style={{ borderLeft: '4px solid var(--accent)' }}>
+              <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-1)', marginBottom: '6px' }}>
                 What FleetShield Proves
               </div>
-              <div style={{ fontSize: '0.8125rem', color: 'var(--text-2)', lineHeight: 1.5 }}>
+              <div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
                 FleetShield verifies a compliance claim using Midnight's zero-knowledge infrastructure without exposing the underlying private witness data as the verification result.
               </div>
             </div>
@@ -1872,45 +1936,47 @@ function App() {
             <ScalabilityArchitectureDiagram />
 
             <div className="detail-section">
-              <div className="detail-section-title">VERIFICATION AUDIT LOG (IMMUTABLE RECORD)</div>
+              <div className="glass-panel-header">VERIFICATION AUDIT LOG (IMMUTABLE RECORD)</div>
               {receiptsHistory.length === 0 ? (
-                <div className="table-empty" style={{ backgroundColor: 'var(--ink-2)', border: '1px solid var(--stroke-dim)', borderRadius: '6px', padding: '2rem' }}>
+                <div className="table-empty" style={{ background: 'var(--surface-card)', border: '1px solid var(--stroke-base)', borderRadius: '12px', padding: '32px' }}>
                   No ZK verifications performed yet. Run a verification from the Operations map drawer or Demo Scenarios above.
                 </div>
               ) : (
-                <div className="data-table" style={{ backgroundColor: 'var(--ink-2)', border: '1px solid var(--stroke-dim)', borderRadius: '6px' }}>
-                  <div className="table-header" style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 1fr 1.5fr' }}>
+                <div className="glass-panel" style={{ padding: 0, overflow: 'hidden' }}>
+                  <div className="data-table" style={{ padding: '16px' }}>
+                  <div className="table-row hide-on-mobile" style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 1fr 1.5fr', alignItems: 'center', paddingBottom: '10px', borderBottom: '1px solid var(--stroke-base)', color: 'var(--text-tertiary)', fontSize: '11px', fontWeight: 500, letterSpacing: '0.05em' }}>
                     <div>VERIFICATION ID / TRIP</div>
                     <div>DRIVER</div>
                     <div>RESULT</div>
                     <div>TIMESTAMP</div>
                     <div style={{ textAlign: 'right' }}>ACTIONS</div>
                   </div>
-                  {receiptsHistory.map(rec => (
-                    <div key={rec.verificationId} className="table-row" style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 1fr 1.5fr' }}>
+                  {receiptsHistory.map((rec, idx) => (
+                    <div key={rec.verificationId} className="table-row hover-subtle" style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 1fr 1.5fr', alignItems: 'center', padding: '12px 0', borderBottom: idx === receiptsHistory.length - 1 ? 'none' : '1px solid var(--stroke-base)' }}>
                       <div className="cell-entity">
-                        <span className="entity-name" style={{ fontFamily: 'var(--font-mono)' }}>{rec.verificationId}</span>
-                        <span className="entity-sub">{rec.tripId} ({rec.vehicleId})</span>
+                        <span className="entity-name" style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--text-primary)', marginBottom: '2px' }}>{rec.verificationId}</span>
+                        <span className="entity-sub" style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{rec.tripId} ({rec.vehicleId})</span>
                       </div>
                       <div className="cell-entity">
-                        <span className="entity-name">{rec.driverName}</span>
+                        <span className="entity-name" style={{ fontSize: '13px', color: 'var(--text-primary)' }}>{rec.driverName}</span>
                       </div>
                       <div className="cell-status">
-                        <span className={`badge ${rec.status === 'VERIFIED' ? 'badge-ok' : 'badge-crit'}`}>
+                        <span className={`badge ${rec.status === 'VERIFIED' ? 'badge-ok' : 'badge-crit'}`} style={{ padding: '2px 6px', fontSize: '11px', fontWeight: 500 }}>
                           {rec.status}
                         </span>
                       </div>
-                      <div className="cell-metric" style={{ textAlign: 'left' }}>{rec.timestamp}</div>
-                      <div className="cell-metric" style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                        <button className="copy-btn-inline" onClick={() => { setActiveReceipt(rec); setReceiptModalOpen(true); }}>
+                      <div className="cell-metric" style={{ textAlign: 'left', fontSize: '12px', color: 'var(--text-secondary)' }}>{rec.timestamp}</div>
+                      <div className="cell-metric" style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                        <button className="btn btn-secondary" style={{ padding: '4px 8px', fontSize: '11px' }} onClick={() => { setActiveReceipt(rec); setReceiptModalOpen(true); }}>
                           Receipt
                         </button>
-                        <button className="copy-btn-inline" onClick={() => startReplay(rec)}>
+                        <button className="btn btn-secondary" style={{ padding: '4px 8px', fontSize: '11px' }} onClick={() => startReplay(rec)}>
                           Replay
                         </button>
                       </div>
                     </div>
                   ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -1937,15 +2003,15 @@ function App() {
                     </span>
                   </div>
 
-                  <div style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-1)' }}>
+                  <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-1)' }}>
                     {inc.title}
                   </div>
 
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-2)' }}>
-                    {inc.driverName} ({inc.vehicleId}) · Shipment {inc.shipmentId}
+                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                    {inc.driverName} <span style={{ color: 'var(--text-tertiary)' }}>({inc.vehicleId})</span> · Shipment {inc.shipmentId}
                   </div>
 
-                  <div className="terminal" style={{ fontSize: '0.6875rem', marginTop: '0.25rem' }}>
+                  <div className="terminal" style={{ fontSize: '11px', marginTop: '4px', padding: '12px', borderRadius: '8px' }}>
                     {inc.description}
                   </div>
 
@@ -1970,11 +2036,11 @@ function App() {
 
         {/* Activity Log */}
         {activeView === 'ACTIVITY' && (
-          <div className="overview-workspace enter-fade-up">
-            <div className="overview-header">
-              <div>
-                <h1 className="overview-title">System Activity</h1>
-                <div className="overview-subtitle">Live ZK verification events and fleet operations log</div>
+          <div className="workspace-container enter-fade-up">
+            <div className="workspace-header-bar">
+              <div className="workspace-title-group">
+                <h1 className="workspace-title">System Activity</h1>
+                <div className="workspace-desc">Live ZK verification events and fleet operations log</div>
               </div>
               <span className="chip chip-sim">LIVE FEED</span>
             </div>

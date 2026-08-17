@@ -1,5 +1,5 @@
 import { createLogger } from './logger-utils.js';
-import { StandaloneConfig } from './config.js';
+import { StandaloneConfig, PreprodRemoteConfig, PreviewRemoteConfig, type Config } from './config.js';
 import { MidnightWalletProvider } from './midnight-wallet-provider.js';
 import { waitForUnshieldedFunds } from './wallet-utils.js';
 import { unshieldedToken } from '@midnight-ntwrk/midnight-js-protocol/ledger';
@@ -31,7 +31,7 @@ export class TripVerifyService {
     private deployedContract: any,
     private providers: any,
     private logger: any
-  ) {}
+  ) { }
 
   async verifyTrip(tripIdBytes: Uint8Array, safetyConditionsMet: boolean): Promise<{ success: boolean; txHash?: string; error?: string }> {
     try {
@@ -64,7 +64,7 @@ export class TripVerifyService {
 }
 
 export class FallbackTripVerifyService {
-  constructor(private logger: any) {}
+  constructor(private logger: any) { }
 
   async verifyTrip(_tripIdBytes: Uint8Array, safetyConditionsMet: boolean): Promise<{ success: boolean; txHash?: string; error?: string }> {
     if (safetyConditionsMet) {
@@ -90,9 +90,16 @@ export async function initTripVerifyService(): Promise<any> {
   if (cachedServicePromise) return cachedServicePromise;
 
   cachedServicePromise = (async () => {
-    const config = new StandaloneConfig();
+    let config: Config;
+    if (process.env.NETWORK === 'preprod') {
+      config = new PreprodRemoteConfig();
+    } else if (process.env.NETWORK === 'preview') {
+      config = new PreviewRemoteConfig();
+    } else {
+      config = new StandaloneConfig();
+    }
     const logger = await createLogger(config.logDir);
-    
+
     // We expect the script to be run from the bboard-cli directory
     const assetsPath = path.resolve(process.cwd(), '../contract/src/managed/tripverify');
 
@@ -107,8 +114,11 @@ export async function initTripVerifyService(): Promise<any> {
     try {
       const testEnv = config.getEnvironment(logger);
       envConfiguration = await testEnv.start();
-      logger.info(`Standalone Environment started`);
+      logger.info(`Environment started`);
     } catch (e: any) {
+      if (process.env.NETWORK === 'preprod' || process.env.NETWORK === 'preview') {
+        throw new Error(`PreProd/Preview deployment failed: ${e.message}`);
+      }
       logger.info(`Container environment unavailable (${e.message}). Initialized Midnight ZK Proof Service fallback.`);
       return new FallbackTripVerifyService(logger);
     }
