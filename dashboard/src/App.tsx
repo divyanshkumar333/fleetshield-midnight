@@ -1779,17 +1779,14 @@ function App() {
             <MapContainer 
               center={MAP_CENTER} 
               zoom={6} 
-              minZoom={4}
+              minZoom={3}
               maxZoom={18}
-              worldCopyJump={false}
               scrollWheelZoom={true} 
               style={{ width: '100%', height: '100%', position: 'absolute', inset: 0 }}
             >
               <TileLayer
                 attribution='&copy; <a href="https://carto.com/">CARTO</a>'
                 url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                noWrap={true}
-                bounds={[[5, 60], [38, 98]]}
               />
 
               <GlobalMapControls driverLocations={driverLocations} activeDriverId={activeDriverId} />
