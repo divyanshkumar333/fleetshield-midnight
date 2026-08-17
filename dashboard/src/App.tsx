@@ -467,32 +467,144 @@ function MapController({ lat, lng, activeDriverId }: { lat?: number, lng?: numbe
   return null;
 }
 
-function MapResizeHandler({ isVisible }: { isVisible: boolean }) {
+function MapResizeHandler({ isVisible, selectedDriverId }: { isVisible: boolean; selectedDriverId?: string | null }) {
   const map = useMap();
+
   useEffect(() => {
-    if (isVisible) {
-      const timer = setTimeout(() => {
-        map.invalidateSize();
-      }, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [isVisible, map]);
+    if (!isVisible) return;
+
+    const triggerResize = () => {
+      try {
+        map.invalidateSize({ animate: false });
+      } catch (e) {
+        // ignore
+      }
+    };
+
+    triggerResize();
+    const raf1 = requestAnimationFrame(() => triggerResize());
+    const raf2 = requestAnimationFrame(() => requestAnimationFrame(() => triggerResize()));
+    const timer1 = setTimeout(triggerResize, 100);
+    const timer2 = setTimeout(triggerResize, 300);
+
+    const container = map.getContainer();
+    if (!container) return () => { cancelAnimationFrame(raf1); cancelAnimationFrame(raf2); clearTimeout(timer1); clearTimeout(timer2); };
+
+    let resizeTimer: any;
+    const observer = new ResizeObserver(() => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(triggerResize, 50);
+    });
+    observer.observe(container);
+
+    return () => {
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(resizeTimer);
+      observer.disconnect();
+    };
+  }, [isVisible, selectedDriverId, map]);
+
   return null;
 }
 
-function GlobalMapControls() {
+function FleetBoundsController({ driverLocations, isVisible }: { driverLocations: any[]; isVisible: boolean }) {
   const map = useMap();
+  const initialFitDone = useRef(false);
+
+  useEffect(() => {
+    if (!isVisible || initialFitDone.current || !driverLocations || driverLocations.length === 0) return;
+
+    const validPoints: [number, number][] = [];
+    driverLocations.forEach(driver => {
+      if (Number.isFinite(driver.currentLat) && Number.isFinite(driver.currentLng) && driver.currentLat !== 0 && driver.currentLng !== 0) {
+        validPoints.push([driver.currentLat, driver.currentLng]);
+      }
+      if (driver.destination && Number.isFinite(driver.destination.lat) && Number.isFinite(driver.destination.lng)) {
+        validPoints.push([driver.destination.lat, driver.destination.lng]);
+      }
+      if (driver.routeCoords) {
+        driver.routeCoords.forEach(([lat, lng]: [number, number]) => {
+          if (Number.isFinite(lat) && Number.isFinite(lng)) {
+            validPoints.push([lat, lng]);
+          }
+        });
+      }
+    });
+
+    if (validPoints.length > 0) {
+      const bounds = L.latLngBounds(validPoints);
+      if (bounds.isValid()) {
+        initialFitDone.current = true;
+        map.invalidateSize();
+        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 7, animate: false });
+      }
+    }
+  }, [isVisible, driverLocations, map]);
+
+  return null;
+}
+
+function GlobalMapControls({ driverLocations, activeDriverId }: { driverLocations: any[]; activeDriverId: string | null }) {
+  const map = useMap();
+
+  const handleFitFleet = () => {
+    const validPoints: [number, number][] = [];
+    driverLocations.forEach(driver => {
+      if (Number.isFinite(driver.currentLat) && Number.isFinite(driver.currentLng) && driver.currentLat !== 0 && driver.currentLng !== 0) {
+        validPoints.push([driver.currentLat, driver.currentLng]);
+      }
+      if (driver.destination && Number.isFinite(driver.destination.lat) && Number.isFinite(driver.destination.lng)) {
+        validPoints.push([driver.destination.lat, driver.destination.lng]);
+      }
+      if (driver.routeCoords) {
+        driver.routeCoords.forEach(([lat, lng]: [number, number]) => {
+          if (Number.isFinite(lat) && Number.isFinite(lng)) {
+            validPoints.push([lat, lng]);
+          }
+        });
+      }
+    });
+
+    if (validPoints.length > 0) {
+      const bounds = L.latLngBounds(validPoints);
+      if (bounds.isValid()) {
+        map.invalidateSize();
+        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 7, animate: true });
+      }
+    } else {
+      map.setView(MAP_CENTER, 6);
+    }
+  };
+
+  const selectedDriver = driverLocations.find(d => d.id === activeDriverId);
+
   return (
     <div className="map-global-controls">
       <button className="map-btn" onClick={() => map.zoomIn()} title="Zoom In">
-        <ZoomIn size={18} />
+        <ZoomIn size={16} />
       </button>
       <button className="map-btn" onClick={() => map.zoomOut()} title="Zoom Out">
-        <ZoomOut size={18} />
+        <ZoomOut size={16} />
       </button>
-      <button className="map-btn" onClick={() => map.setView(MAP_CENTER, 6)} title="Recenter Fleet">
-        <Focus size={18} />
+      <button className="map-btn" onClick={handleFitFleet} title="Fit Entire Fleet Bounds">
+        <Focus size={16} />
+        <span>Fit Fleet</span>
       </button>
+      {selectedDriver && Number.isFinite(selectedDriver.currentLat) && Number.isFinite(selectedDriver.currentLng) && (
+        <button 
+          className="map-btn active" 
+          onClick={() => {
+            map.setView([selectedDriver.currentLat, selectedDriver.currentLng], 9, { animate: true });
+          }} 
+          title="Track Selected Truck"
+        >
+          <Navigation size={16} />
+          <span>Track Truck</span>
+        </button>
+      )}
     </div>
   );
 }
@@ -1667,16 +1779,22 @@ function App() {
             <MapContainer 
               center={MAP_CENTER} 
               zoom={6} 
+              minZoom={4}
+              maxZoom={18}
+              worldCopyJump={false}
               scrollWheelZoom={true} 
-              style={{ width: '100%', height: '100%' }}
+              style={{ width: '100%', height: '100%', position: 'absolute', inset: 0 }}
             >
               <TileLayer
                 attribution='&copy; <a href="https://carto.com/">CARTO</a>'
                 url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                noWrap={true}
+                bounds={[[5, 60], [38, 98]]}
               />
 
-              <GlobalMapControls />
-              <MapResizeHandler isVisible={activeView === 'OPERATIONS'} />
+              <GlobalMapControls driverLocations={driverLocations} activeDriverId={activeDriverId} />
+              <MapResizeHandler isVisible={activeView === 'OPERATIONS'} selectedDriverId={activeDriverId} />
+              <FleetBoundsController driverLocations={driverLocations} isVisible={activeView === 'OPERATIONS'} />
               <MapController 
                 lat={selectedDriver?.currentLat} 
                 lng={selectedDriver?.currentLng} 
