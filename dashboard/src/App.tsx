@@ -828,11 +828,13 @@ function App() {
     return () => clearInterval(interval);
   }, [simulationSpeed]);
 
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:4000').replace(/\/$/, '');
+
   // Check Backend Status
   useEffect(() => {
     const checkBackend = async () => {
       try {
-        const res = await fetch('http://127.0.0.1:4000/health');
+        const res = await fetch(`${API_BASE_URL}/health`);
         if (res.ok) setBackendStatus('ready');
         else setBackendStatus('offline');
       } catch (err) {
@@ -1016,7 +1018,7 @@ function App() {
           restStopsCompleted: safetyConditionsMet ? 2 : 0
         };
 
-        const res = await fetch('http://127.0.0.1:4000/verify-trip', {
+        const res = await fetch(`${API_BASE_URL}/verify-trip`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -1106,7 +1108,7 @@ function App() {
         }
       } catch (err) {
         setStatus('error');
-        const errText = 'Failed to connect to local Midnight ZK verification backend API (localhost:4000)';
+        const errText = `Failed to connect to Midnight ZK verification backend API (${API_BASE_URL})`;
         setErrorMsg(errText);
 
         setDriverLocations(prev => prev.map(d => d.id === driver.id ? {
