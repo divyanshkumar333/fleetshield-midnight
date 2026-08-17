@@ -1229,9 +1229,19 @@ function App() {
       {/* Top Enterprise Header */}
       <header className="app-header">
         <div className="header-brand">
-          <div className="brand-logo">
-            <Shield size={16} color="var(--accent)" />
-            <span style={{ letterSpacing: '0.06em', fontWeight: 700, fontSize: 'var(--fs-base)' }}>FLEETSHIELD</span>
+          <div className="brand-logo" onClick={() => setActiveView('OVERVIEW')}>
+            <div className="brand-icon-shield">
+              <svg width="18" height="20" viewBox="0 0 24 26" fill="none">
+                <path 
+                  d="M12 2L3 6.2V12.8C3 18.2 6.8 23.2 12 24.8C17.2 23.2 21 18.2 21 12.8V6.2L12 2Z" 
+                  stroke="var(--accent)" 
+                  strokeWidth="2.4" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+            <span className="brand-wordmark">FLEETSHIELD</span>
           </div>
 
           <div className="header-divider hide-on-mobile" />
