@@ -1421,7 +1421,7 @@ function App() {
 
         {/* Dynamic Workspace View Router */}
         {activeView === 'OVERVIEW' && (
-          <div className="overview-workspace">
+          <div className="overview-workspace enter-fade-up">
             <div className="overview-header">
               <div>
                 <h1 className="overview-title">Enterprise Logistics Command Center</h1>
@@ -1555,7 +1555,7 @@ function App() {
         )}
 
         {/* Persistent Map Operations View */}
-        <div className="operations-workspace" style={{ display: activeView === 'OPERATIONS' ? 'flex' : 'none' }}>
+        <div className="operations-workspace enter-fade-up" style={{ display: activeView === 'OPERATIONS' ? 'flex' : 'none' }}>
           {/* Left Data Panel */}
           <aside className={`side-panel ${mobileMenuOpen ? 'mobile-open' : ''}`} onClick={(e) => { if (window.innerWidth <= 768 && (e.target as HTMLElement).closest('.side-panel-tabs')) setMobileMenuOpen(v => !v); }}>
             <div className="mobile-sheet-handle show-on-mobile-only" />
@@ -1926,7 +1926,7 @@ function App() {
         </div>
 
         {activeView === 'SHIPMENTS' && (
-          <div className="workspace-container">
+          <div className="workspace-container enter-fade-up">
             <div className="workspace-header-bar">
               <div className="workspace-title-group">
                 <h1 className="workspace-title">Shipment Operations Workspace</h1>
@@ -1988,7 +1988,7 @@ function App() {
         )}
 
         {activeView === 'COMPLIANCE' && (
-          <div className="workspace-container">
+          <div className="workspace-container enter-fade-up">
             <div className="workspace-header-bar">
               <div className="workspace-title-group">
                 <h1 className="workspace-title">Compliance & ZK Verification Center</h1>
@@ -2045,7 +2045,7 @@ function App() {
         )}
 
         {activeView === 'SETTLEMENTS' && (
-          <div className="workspace-container">
+          <div className="workspace-container enter-fade-up">
             <div className="workspace-header-bar">
               <div className="workspace-title-group">
                 <h1 className="workspace-title">Financial Settlement & Payouts</h1>
@@ -2109,7 +2109,7 @@ function App() {
         )}
 
         {activeView === 'DRIVERS' && (
-          <div className="workspace-container">
+          <div className="workspace-container enter-fade-up">
             <div className="workspace-header-bar">
               <div className="workspace-title-group">
                 <h1 className="workspace-title">Drivers & Personnel Roster</h1>
@@ -2156,7 +2156,7 @@ function App() {
         )}
 
         {activeView === 'PRIVACY_AUDIT' && (
-          <div className="workspace-container">
+          <div className="workspace-container enter-fade-up">
             <div className="privacy-banner-statement" style={{ backgroundColor: 'var(--ink-2)', borderLeft: '4px solid var(--accent)', padding: '1.25rem' }}>
               <div style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-1)', marginBottom: '0.375rem' }}>
                 What FleetShield Proves
@@ -2216,7 +2216,7 @@ function App() {
         )}
 
         {activeView === 'INCIDENTS' && (
-          <div className="workspace-container">
+          <div className="workspace-container enter-fade-up">
             <div className="workspace-header-bar">
               <div className="workspace-title-group">
                 <h1 className="workspace-title">Incident Response Center</h1>
