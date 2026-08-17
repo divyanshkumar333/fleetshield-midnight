@@ -2,12 +2,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 /* ==========================================================================
-   FLEETSHIELD ENTERPRISE DESIGN SYSTEM
+   FLEETSHIELD MASTER DESIGN SYSTEM
    World-Class Logistics Operating System Architecture
    ========================================================================== */
 
 :root {
-  /* ── COLOR PALETTE ── */
+  /* ── COLOR SYSTEM ── */
   --ink-0: #040608;
   --ink-1: #080b0f;
   --ink-2: #0d1117;
@@ -19,6 +19,7 @@
   --surface-panel: #0d1117;
   --surface-card: #131821;
   --surface-elevated: #1a2230;
+  --surface-glass: rgba(13, 17, 23, 0.88);
 
   /* Quiet Strokes & Dividers */
   --stroke-subtle: rgba(255, 255, 255, 0.05);
@@ -62,6 +63,7 @@
   --sp-4: 16px;
   --sp-5: 20px;
   --sp-6: 24px;
+  --sp-7: 32px;
 
   /* Type Scale */
   --fs-2xs: 10px;
@@ -78,6 +80,7 @@
   --r-md: 6px;
   --r-lg: 8px;
   --r-xl: 12px;
+  --r-2xl: 16px;
 
   /* Motion */
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
@@ -89,7 +92,7 @@
   --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 
-  /* Compatibility Tokens */
+  /* Compatibility Aliases */
   --bg-base: var(--ink-1);
   --bg-surface: var(--ink-2);
   --bg-surface-hover: var(--ink-4);
@@ -145,7 +148,7 @@ input, select, textarea {
 }
 
 /* ==========================================================================
-   ANIMATIONS
+   MOTION & ANIMATIONS
    ========================================================================== */
 
 @keyframes enterFadeUp {
@@ -171,7 +174,7 @@ input, select, textarea {
 }
 
 /* ==========================================================================
-   APP SHELL LAYOUT
+   APP SHELL
    ========================================================================== */
 
 .app-layout {
@@ -182,7 +185,7 @@ input, select, textarea {
   background: var(--ink-0);
 }
 
-/* ── SIMPLIFIED ENTERPRISE HEADER ── */
+/* ── HEADER (48px) ── */
 .app-header {
   flex-shrink: 0;
   height: 48px;
@@ -406,7 +409,7 @@ input, select, textarea {
   overflow: hidden;
 }
 
-/* ── COMPACT LEFT NAVIGATION (190px) ── */
+/* ── COMPACT LEFT NAVIGATION (195px) ── */
 .enterprise-sidebar {
   width: 195px;
   flex-shrink: 0;
@@ -1035,6 +1038,123 @@ input, select, textarea {
   color: var(--text-3);
 }
 
+/* Focus Block & Stop Info */
+.focus-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--sp-3);
+  background: var(--ink-1);
+  border: 1px solid var(--stroke-base);
+  border-radius: var(--r-sm);
+}
+
+.focus-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.focus-tag {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+.focus-meta {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text-2);
+}
+
+.focus-title {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--text-1);
+}
+
+.next-stop-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-3);
+  margin-top: 2px;
+}
+
+.next-stop-name {
+  font-family: var(--font-mono);
+  color: var(--text-2);
+}
+
+/* ZK Prover in Drawer */
+.detail-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  background: var(--ink-1);
+  border: 1px solid var(--stroke-base);
+  border-radius: var(--r-sm);
+}
+
+.detail-section-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--text-2);
+  text-transform: uppercase;
+}
+
+.zk-audit-trail {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.zk-audit-step {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px;
+  background: var(--ink-0);
+  border: 1px solid var(--stroke-subtle);
+  border-radius: var(--r-sm);
+  font-size: 10px;
+  color: var(--text-3);
+}
+
+.zk-audit-step.active {
+  border-color: var(--accent-border);
+  color: var(--accent-hover);
+}
+
+.zk-audit-step.success {
+  color: var(--ok);
+}
+
+.zk-audit-step.rejected {
+  color: var(--crit);
+}
+
+.zk-step-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.zk-step-status-chip {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+}
+
 /* ==========================================================================
    OTHER WORKSPACE VIEWS (OVERVIEW, SHIPMENTS, COMPLIANCE, SETTLEMENTS)
    ========================================================================== */
@@ -1402,6 +1522,10 @@ input, select, textarea {
 
 .copy-btn-inline:hover { color: var(--accent-hover); }
 
+.show-on-mobile-only {
+  display: none !important;
+}
+
 /* ==========================================================================
    MOBILE & RESPONSIVE BREAKPOINTS
    ========================================================================== */
@@ -1414,6 +1538,10 @@ input, select, textarea {
   .app-workspace {
     flex-direction: column;
     height: calc(100% - 48px);
+  }
+
+  .show-on-mobile-only {
+    display: block !important;
   }
 
   .hide-on-mobile { display: none !important; }
@@ -1458,7 +1586,7 @@ input, select, textarea {
     bottom: 0;
     width: 100% !important;
     max-width: 100%;
-    z-index: 100;
+    z-index: 1000;
   }
 
   .metrics-row { grid-template-columns: 1fr 1fr; }
@@ -1470,142 +1598,217 @@ input, select, textarea {
   .table-header, .table-row { grid-template-columns: minmax(0, 1fr) 68px 28px; }
 }
 
-.show-on-mobile-only {
-  display: none !important;
+/* ==========================================================================
+   UNIFIED MODAL SYSTEM
+   ========================================================================== */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: var(--sp-4);
 }
 
-@media (max-width: 768px) {
-  .show-on-mobile-only {
-    display: block !important;
-  }
-}
-
-.sidebar-close-mobile {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: var(--ink-3);
-  border: 1px solid var(--stroke-dim);
-  color: var(--text-2);
-  border-radius: var(--r-sm);
-  padding: 4px;
-  cursor: pointer;
-  z-index: 30;
-}
-
-/* Focus Block & Stop Info */
-.focus-block {
+.receipt-modal-card, .investigation-modal-card, .replay-modal-card {
+  background: var(--surface-panel);
+  border: 1px solid var(--stroke-strong);
+  border-radius: var(--r-lg);
+  max-width: 540px;
+  width: 100%;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85);
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: var(--sp-3);
-  background: var(--ink-1);
-  border: 1px solid var(--stroke-base);
-  border-radius: var(--r-sm);
+  overflow: hidden;
+  animation: enterFadeUp var(--dur-base) var(--ease);
 }
 
-.focus-header {
+.modal-header-bar {
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--stroke-base);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  background: var(--ink-1);
 }
 
-.focus-tag {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  color: var(--accent);
-  text-transform: uppercase;
+.modal-title-group {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
 }
 
-.focus-meta {
-  font-size: 10px;
-  font-family: var(--font-mono);
-  color: var(--text-2);
-}
-
-.focus-title {
-  font-size: var(--fs-xs);
+.modal-title-text {
+  font-size: var(--fs-sm);
   font-weight: 700;
   color: var(--text-1);
+  letter-spacing: 0.02em;
 }
 
-.next-stop-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 11px;
-  color: var(--text-3);
-  margin-top: 2px;
-}
-
-.next-stop-name {
-  font-family: var(--font-mono);
-  color: var(--text-2);
-}
-
-/* ZK Prover in Drawer */
-.detail-section {
+.receipt-modal-body, .investigation-modal-body, .replay-modal-body {
+  padding: var(--sp-4);
   display: flex;
   flex-direction: column;
+  gap: var(--sp-3);
+  max-height: 75vh;
+  overflow-y: auto;
+}
+
+.receipt-privacy-notice {
+  display: flex;
+  align-items: center;
   gap: var(--sp-2);
-  padding: var(--sp-3);
-  background: var(--ink-1);
-  border: 1px solid var(--stroke-base);
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-border);
   border-radius: var(--r-sm);
-}
-
-.detail-section-title {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  color: var(--text-2);
-  text-transform: uppercase;
-}
-
-.zk-audit-trail {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.zk-audit-step {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 4px 6px;
-  background: var(--ink-0);
-  border: 1px solid var(--stroke-subtle);
-  border-radius: var(--r-sm);
-  font-size: 10px;
-  color: var(--text-3);
-}
-
-.zk-audit-step.active {
-  border-color: var(--accent-border);
+  font-size: 11px;
   color: var(--accent-hover);
 }
 
-.zk-audit-step.success {
-  color: var(--ok);
-}
-
-.zk-audit-step.rejected {
+.receipt-privacy-notice.notice-crit {
+  background: var(--crit-dim);
+  border-color: var(--crit-border);
   color: var(--crit);
 }
 
-.zk-step-left {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: 600;
+.receipt-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  background: var(--ink-1);
+  border: 1px solid var(--stroke-base);
+  border-radius: var(--r-sm);
 }
 
-.zk-step-status-chip {
-  font-family: var(--font-mono);
+.receipt-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.receipt-label {
   font-size: 9px;
   font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--text-3);
+  text-transform: uppercase;
+}
+
+.receipt-value {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.modal-footer-bar {
+  padding: var(--sp-3) var(--sp-4);
+  border-top: 1px solid var(--stroke-base);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+  background: var(--ink-1);
+}
+
+/* Command Palette */
+.cmd-palette-card {
+  background: var(--surface-panel);
+  border: 1px solid var(--stroke-strong);
+  border-radius: var(--r-lg);
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.9);
+  overflow: hidden;
+  animation: enterFadeUp var(--dur-base) var(--ease);
+}
+
+.cmd-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--stroke-base);
+  background: var(--ink-1);
+}
+
+.cmd-input {
+  background: transparent;
+  border: none;
+  font-size: var(--fs-sm);
+  color: var(--text-1);
+  outline: none;
+  width: 100%;
+}
+
+.cmd-list {
+  display: flex;
+  flex-direction: column;
+  padding: var(--sp-2);
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.cmd-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 8px var(--sp-3);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+  cursor: pointer;
+  transition: all var(--dur-fast) ease;
+}
+
+.cmd-item:hover {
+  background: var(--accent-dim);
+  color: var(--text-1);
+}
+
+.cmd-item-active {
+  background: var(--accent-dim);
+  color: var(--text-1);
+}
+
+.cmd-driver-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.modal-footer-actions {
+  padding: var(--sp-3) var(--sp-4);
+  border-top: 1px solid var(--stroke-base);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sp-3);
+  background: var(--ink-1);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  padding: 8px var(--sp-3);
+  background: var(--ink-3);
+  border: 1px solid var(--stroke-strong);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--text-1);
+  transition: all var(--dur-fast) ease;
+}
+
+.btn-secondary:hover {
+  background: var(--ink-4);
+  border-color: var(--stroke-focus);
 }
