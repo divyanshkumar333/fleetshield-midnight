@@ -146,33 +146,16 @@ a { color: inherit; }
 .brand-logo {
   display: flex;
   align-items: center;
-  gap: 8px;
-  cursor: pointer;
+  gap: var(--sp-2);
   user-select: none;
-  transition: opacity var(--dur-fast) ease;
 }
 
-.brand-logo:hover {
-  opacity: 0.9;
-}
-
-.brand-icon-shield {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  filter: drop-shadow(0 0 6px rgba(45, 212, 191, 0.4));
-}
-
-.brand-wordmark {
-  font-family: var(--font-sans);
-  font-size: 14.5px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  color: #ffffff;
-  text-transform: uppercase;
-  line-height: 1;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+.brand-logo-img {
+  height: 32px;
+  width: auto;
+  max-width: 175px;
+  object-fit: contain;
+  display: block;
 }
 
 /* Navigation tabs in header */
