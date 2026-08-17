@@ -16,7 +16,7 @@ import {
 const MOCK_DRIVERS_DATA = [
   {
     id: 'MS-84921',
-    name: 'David Torres',
+    name: 'Divyansh Kumar',
     score: 42,
     risk: 'HIGH',
     start: { lat: 28.6139, lng: 77.2090 }, // Delhi Hub
@@ -27,7 +27,7 @@ const MOCK_DRIVERS_DATA = [
   },
   {
     id: 'MS-84922',
-    name: 'Sarah Chen',
+    name: 'Vivek Jeet Patel',
     score: 88,
     risk: 'LOW',
     start: { lat: 26.9124, lng: 75.7873 }, // Jaipur Depot
@@ -38,7 +38,7 @@ const MOCK_DRIVERS_DATA = [
   },
   {
     id: 'MS-84923',
-    name: 'Michael Vance',
+    name: 'Tejaswa Daboria',
     score: 65,
     risk: 'MEDIUM',
     start: { lat: 26.2183, lng: 78.1828 }, // Gwalior Facility
@@ -49,7 +49,7 @@ const MOCK_DRIVERS_DATA = [
   },
   {
     id: 'MS-84924',
-    name: 'Robert Jenkins',
+    name: "Daniel D'Souza",
     score: 92,
     risk: 'LOW',
     start: { lat: 22.7196, lng: 75.8577 }, // Indore Depot
@@ -151,7 +151,7 @@ const INITIAL_SHIPMENTS: Shipment[] = [
     destination: 'Mumbai Distribution Hub',
     vehicleId: 'MS-84921',
     driverId: 'MS-84921',
-    driverName: 'David Torres',
+    driverName: 'Divyansh Kumar',
     status: 'IN_TRANSIT',
     priority: 'EXPRESS',
     progress: 0.68,
@@ -167,7 +167,7 @@ const INITIAL_SHIPMENTS: Shipment[] = [
     destination: 'Pune Logistics Center',
     vehicleId: 'MS-84922',
     driverId: 'MS-84922',
-    driverName: 'Sarah Chen',
+    driverName: 'Vivek Jeet Patel',
     status: 'IN_TRANSIT',
     priority: 'CRITICAL',
     progress: 0.85,
@@ -184,7 +184,7 @@ const INITIAL_SHIPMENTS: Shipment[] = [
     destination: 'Ahmedabad Port',
     vehicleId: 'MS-84923',
     driverId: 'MS-84923',
-    driverName: 'Michael Vance',
+    driverName: 'Tejaswa Daboria',
     status: 'AT_STOP',
     priority: 'STANDARD',
     progress: 0.42,
@@ -200,7 +200,7 @@ const INITIAL_SHIPMENTS: Shipment[] = [
     destination: 'Surat Depot',
     vehicleId: 'MS-84924',
     driverId: 'MS-84924',
-    driverName: 'Robert Jenkins',
+    driverName: "Daniel D'Souza",
     status: 'DELIVERED',
     priority: 'EXPRESS',
     progress: 1.0,
@@ -217,7 +217,7 @@ const INITIAL_INCIDENTS: IncidentItem[] = [
   {
     id: 'INC-901',
     vehicleId: 'MS-84921',
-    driverName: 'David Torres',
+    driverName: 'Divyansh Kumar',
     shipmentId: 'SH-84921',
     type: 'COMPLIANCE_REJECTED',
     severity: 'Critical',
@@ -229,7 +229,7 @@ const INITIAL_INCIDENTS: IncidentItem[] = [
   {
     id: 'INC-902',
     vehicleId: 'MS-84923',
-    driverName: 'Michael Vance',
+    driverName: 'Tejaswa Daboria',
     shipmentId: 'SH-84923',
     type: 'VEHICLE_DELAYED',
     severity: 'Warning',
@@ -873,7 +873,7 @@ function App() {
     {
       verificationId: 'ZK-REC-9821',
       tripId: 'MS-84922',
-      driverName: 'Sarah Chen',
+      driverName: 'Vivek Jeet Patel',
       vehicleId: 'MS-84922',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       status: 'VERIFIED',
@@ -887,9 +887,9 @@ function App() {
   const [cmdQuery, setCmdQuery] = useState<string>('');
   const [notificationsOpen, setNotificationsOpen] = useState<boolean>(false);
   const [notifications] = useState<{ id: string; title: string; desc: string; time: string; type: 'alert' | 'info' }[]>([
-    { id: '1', title: 'Midnight Proof Generated', desc: 'Sarah Chen verified on Midnight ledger.', time: '2m ago', type: 'info' },
+    { id: '1', title: 'Midnight Proof Generated', desc: 'Vivek Jeet Patel verified on Midnight ledger.', time: '2m ago', type: 'info' },
     { id: '2', title: 'Settlement Ready', desc: 'Shipment SH-84922 is eligible for ₹3,800 payout.', time: '5m ago', type: 'info' },
-    { id: '3', title: 'Compliance Assertion Failed', desc: 'David Torres trip rejected on contract safety check.', time: '12m ago', type: 'alert' }
+    { id: '3', title: 'Compliance Assertion Failed', desc: 'Divyansh Kumar trip rejected on contract safety check.', time: '12m ago', type: 'alert' }
   ]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [backendStatus, setBackendStatus] = useState<'ready' | 'connecting' | 'offline'>('connecting');
@@ -1334,10 +1334,11 @@ function App() {
       </header>
 
       {/* Main Workspace Body */}
-      <main className="app-workspace" style={{ display: 'flex', flexDirection: 'row', width: '100%', height: 'calc(100% - 50px)' }}>
+      <main className="app-workspace">
         
         {/* Enterprise Navigation Sidebar */}
-        <aside className="enterprise-sidebar">
+        <aside className={`enterprise-sidebar ${mobileMenuOpen ? 'mobile-open' : ''}`}>
+          <button className="sidebar-close-mobile show-on-mobile-only" onClick={() => setMobileMenuOpen(false)}><X size={16} /></button>
           <div className="role-switcher-container">
             <div className="role-switcher-header">
               <span className="role-label">DEMO ROLE</span>
@@ -1555,9 +1556,10 @@ function App() {
         )}
 
         {/* Persistent Map Operations View */}
-        <div style={{ display: activeView === 'OPERATIONS' ? 'flex' : 'none', flexDirection: 'row', width: '100%', height: '100%', position: 'relative' }}>
+        <div className="operations-workspace" style={{ display: activeView === 'OPERATIONS' ? 'flex' : 'none' }}>
           {/* Left Data Panel */}
-          <aside className={`side-panel ${mobileMenuOpen ? 'mobile-open' : ''}`}>
+          <aside className={`side-panel ${mobileMenuOpen ? 'mobile-open' : ''}`} onClick={(e) => { if (window.innerWidth <= 768 && (e.target as HTMLElement).closest('.side-panel-tabs')) setMobileMenuOpen(v => !v); }}>
+            <div className="mobile-sheet-handle show-on-mobile-only" />
             <div className="side-panel-tabs">
               <div className={`sp-tab ${activeTab === 'OPERATIONS' ? 'active' : ''}`} onClick={() => setActiveTab('OPERATIONS')}>Fleet</div>
               <div className={`sp-tab ${activeTab === 'COMPLIANCE' ? 'active' : ''}`} onClick={() => setActiveTab('COMPLIANCE')}>Activity</div>
