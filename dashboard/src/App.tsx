@@ -1232,17 +1232,7 @@ function App() {
           <div className="brand-logo" onClick={() => setActiveView('OVERVIEW')} style={{ cursor: 'pointer' }}>
             <img src="/fleetshield-logo.png" alt="FleetShield" className="brand-logo-img" />
           </div>
-
-          <div className="header-divider hide-on-mobile" />
-
-          {/* Primary View Navigation */}
-          <nav className="header-nav hide-on-mobile">
-            <div className={`nav-item ${activeView === 'OVERVIEW' ? 'active' : ''}`} onClick={() => setActiveView('OVERVIEW')}>Overview</div>
-            <div className={`nav-item ${activeView === 'OPERATIONS' ? 'active' : ''}`} onClick={() => setActiveView('OPERATIONS')}>Operations</div>
-            <div className={`nav-item ${activeView === 'SHIPMENTS' ? 'active' : ''}`} onClick={() => setActiveView('SHIPMENTS')}>Shipments</div>
-            <div className={`nav-item ${activeView === 'COMPLIANCE' ? 'active' : ''}`} onClick={() => setActiveView('COMPLIANCE')}>Compliance</div>
-            <div className={`nav-item ${activeView === 'SETTLEMENTS' ? 'active' : ''}`} onClick={() => setActiveView('SETTLEMENTS')}>Settlements</div>
-          </nav>
+          <span className="brand-badge hide-on-mobile">Fleet Operations</span>
         </div>
         
         <div className="header-actions-group">
