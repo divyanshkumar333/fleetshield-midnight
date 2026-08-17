@@ -146,16 +146,17 @@ a { color: inherit; }
 .brand-logo {
   display: flex;
   align-items: center;
-  gap: var(--sp-2);
   user-select: none;
+  padding: 0 2px;
 }
 
 .brand-logo-img {
-  height: 32px;
+  height: 42px;
   width: auto;
-  max-width: 175px;
+  max-width: 220px;
   object-fit: contain;
   display: block;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5));
 }
 
 /* Navigation tabs in header */
