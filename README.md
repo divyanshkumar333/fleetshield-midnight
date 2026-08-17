@@ -92,24 +92,25 @@ Open `http://localhost:5173` in your browser.
 ## Demo Instructions
 
 ### Valid Case
-1. Select a compliant driver on the dashboard.
-2. Click **Verify Compliance (Valid)**.
+1. Select a compliant driver (e.g., **Vivek Jeet Patel** or **Daniel D'Souza**), or click the **Compliant** scenario chip in the header.
+2. In the Vehicle Intelligence panel, click **Run ZK Verification**.
 3. Observe the sequence:
-   * Private Telemetry
-   * ZK Proof Generation
-   * Midnight Verification
-   * Compliance Verified
-   * Transaction Hash is displayed
+   * 1. Private Telemetry (DONE)
+   * 2. ZK Proof Generation (DONE)
+   * 3. Midnight On-Chain (DONE)
+   * 4. Compliance Result (DONE)
+   * On-chain transaction hash is confirmed and cryptographic ZK receipt is generated.
 
 ### Invalid Case
-1. Click **Demo Invalid Case**.
-2. Observe the sequence:
-   * Private Telemetry
-   * ZK Proof Generation
-   * Midnight Verification
-   * Compliance Rejected
-3. The UI will display the Midnight contract assertion failure: `failed assert: Safety conditions not met`.
+1. Select a high-risk driver (e.g., **Divyansh Kumar**), or click the **Rejected ZK** scenario chip in the header.
+2. Click **Run ZK Verification**.
+3. Observe the sequence:
+   * 1. Private Telemetry (DONE)
+   * 2. ZK Proof Generation (DONE)
+   * 3. Midnight On-Chain (DONE)
+   * 4. Compliance Result (FAIL)
+   * The UI displays the Midnight contract assertion failure: `failed assert: Safety conditions not met`, and flags the compliance incident.
 
-## Public Network Limitation
+## Deployment Status
 
-The working demonstration currently uses the **local standalone Midnight environment**. Public deployment to the Midnight Preview testnet was blocked by known infrastructure issues (indexer synchronization and faucet unavailability) encountered during development. The privacy-preserving architecture is identical.
+Due to a known Midnight Preview/PreProd indexer synchronization issue (tracked as sd#126) and intermittent Preview faucet downtime encountered during our build window, we were unable to complete wallet funding on the public testnet in time for submission. All core functionality — Compact contract compilation, ZK proof generation, on-chain-style transaction submission, and both valid/invalid compliance verification paths — is fully implemented and tested against Midnight's local standalone environment, which uses the identical contract, compiler (compactc 0.31.1), and proof server used on Preview/PreProd. We are prepared to redeploy to Preview/PreProd the moment network infrastructure stabilizes.
