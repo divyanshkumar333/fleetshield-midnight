@@ -6,8 +6,10 @@ import L from 'leaflet';
 import { 
   Shield, Activity, HardDrive, Lock, Server, CheckCircle2, XCircle, 
   ChevronRight, ShieldCheck, ShieldAlert, Navigation, Search, Bell, 
-  Focus, ZoomIn, ZoomOut, Pause, Menu, X, Check, ChevronDown, Download, 
-  Copy, RotateCcw, Layers, Tv, ExternalLink, AlertOctagon 
+  Focus, ZoomIn, ZoomOut, Pause, Menu, X, Download, 
+  Copy, RotateCcw, Layers, Tv, AlertOctagon,
+  LayoutDashboard, MapPin, Package, UserCheck, CreditCard, AlertTriangle,
+  Truck, Clock
 } from 'lucide-react';
 
 // Mock Data
@@ -73,6 +75,137 @@ interface DriverSimulation {
   driverStatus: DriverStatus;
   stops: RouteStop[];
 }
+
+interface Shipment {
+  id: string;
+  origin: string;
+  destination: string;
+  vehicleId: string;
+  driverId: string;
+  driverName: string;
+  status: 'SCHEDULED' | 'ASSIGNED' | 'IN_TRANSIT' | 'AT_STOP' | 'DELAYED' | 'DELIVERED' | 'EXCEPTION';
+  priority: 'STANDARD' | 'EXPRESS' | 'CRITICAL';
+  progress: number;
+  eta: string;
+  deliveryStop: string;
+  complianceState: 'PENDING' | 'VERIFIED' | 'REJECTED' | 'UNVERIFIED';
+  payoutAmount: number;
+  settlementStatus: 'NOT_ELIGIBLE' | 'READY_FOR_APPROVAL' | 'APPROVED';
+  txHash?: string;
+}
+
+interface IncidentItem {
+  id: string;
+  vehicleId: string;
+  driverName: string;
+  shipmentId: string;
+  type: 'COMPLIANCE_REJECTED' | 'VEHICLE_DELAYED' | 'DELIVERY_EXCEPTION' | 'BACKEND_OFFLINE';
+  severity: 'Critical' | 'Warning' | 'Info';
+  title: string;
+  description: string;
+  timestamp: Date;
+  resolved: boolean;
+}
+
+type RoleMode = 'Fleet Manager' | 'Dispatcher' | 'Compliance Officer' | 'Finance';
+type ViewMode = 'OVERVIEW' | 'OPERATIONS' | 'SHIPMENTS' | 'COMPLIANCE' | 'SETTLEMENTS' | 'DRIVERS' | 'PRIVACY_AUDIT' | 'INCIDENTS';
+type TabState = 'OPERATIONS' | 'COMPLIANCE';
+
+const INITIAL_SHIPMENTS: Shipment[] = [
+  {
+    id: 'SH-84921',
+    origin: 'Delhi Hub',
+    destination: 'Mumbai Distribution Hub',
+    vehicleId: 'MS-84921',
+    driverId: 'MS-84921',
+    driverName: 'David Torres',
+    status: 'IN_TRANSIT',
+    priority: 'EXPRESS',
+    progress: 0.68,
+    eta: '11:45 AM',
+    deliveryStop: 'Regional Hub',
+    complianceState: 'PENDING',
+    payoutAmount: 2450,
+    settlementStatus: 'NOT_ELIGIBLE'
+  },
+  {
+    id: 'SH-84922',
+    origin: 'Jaipur Depot',
+    destination: 'Pune Logistics Center',
+    vehicleId: 'MS-84922',
+    driverId: 'MS-84922',
+    driverName: 'Sarah Chen',
+    status: 'IN_TRANSIT',
+    priority: 'CRITICAL',
+    progress: 0.85,
+    eta: '10:30 AM',
+    deliveryStop: 'Pune Terminal',
+    complianceState: 'VERIFIED',
+    payoutAmount: 3800,
+    settlementStatus: 'READY_FOR_APPROVAL',
+    txHash: '5ac8fb98fec25d9174a7418d90e64293bc4b859759528a686139c9051020d425'
+  },
+  {
+    id: 'SH-84923',
+    origin: 'Gwalior Facility',
+    destination: 'Ahmedabad Port',
+    vehicleId: 'MS-84923',
+    driverId: 'MS-84923',
+    driverName: 'Michael Vance',
+    status: 'AT_STOP',
+    priority: 'STANDARD',
+    progress: 0.42,
+    eta: '02:15 PM',
+    deliveryStop: 'Highway Rest Area',
+    complianceState: 'PENDING',
+    payoutAmount: 1950,
+    settlementStatus: 'NOT_ELIGIBLE'
+  },
+  {
+    id: 'SH-84924',
+    origin: 'Indore Depot',
+    destination: 'Surat Depot',
+    vehicleId: 'MS-84924',
+    driverId: 'MS-84924',
+    driverName: 'Robert Jenkins',
+    status: 'DELIVERED',
+    priority: 'EXPRESS',
+    progress: 1.0,
+    eta: '09:15 AM',
+    deliveryStop: 'Final Destination',
+    complianceState: 'VERIFIED',
+    payoutAmount: 4200,
+    settlementStatus: 'APPROVED',
+    txHash: 'e2d84b7de5b9f14e09a38e1e9c35424d97e10a98a61c12b7ab0f43a52b1c35b7'
+  }
+];
+
+const INITIAL_INCIDENTS: IncidentItem[] = [
+  {
+    id: 'INC-901',
+    vehicleId: 'MS-84921',
+    driverName: 'David Torres',
+    shipmentId: 'SH-84921',
+    type: 'COMPLIANCE_REJECTED',
+    severity: 'Critical',
+    title: 'Midnight ZK Compliance Assertion Failed',
+    description: 'Contract safety conditions not met for high-speed segment.',
+    timestamp: new Date(Date.now() - 15 * 60 * 1000),
+    resolved: false
+  },
+  {
+    id: 'INC-902',
+    vehicleId: 'MS-84923',
+    driverName: 'Michael Vance',
+    shipmentId: 'SH-84923',
+    type: 'VEHICLE_DELAYED',
+    severity: 'Warning',
+    title: 'Route Delay Detected (+24 mins)',
+    description: 'Highway Rest Area stop exceeded planned duration window.',
+    timestamp: new Date(Date.now() - 45 * 60 * 1000),
+    resolved: false
+  }
+];
 
 const computePolylineLength = (coords: [number, number][]) => {
   let len = 0;
@@ -162,7 +295,6 @@ const generateStops = (coords: [number, number][], distanceKm: number, driverId:
     lat: last[0], lng: last[1], progressThreshold: 1.0, durationMs: 0, remainingMs: 0, status: 'pending'
   });
   
-  // Snap coordinates to exact polyline path based on threshold
   return stops.map(stop => {
     if (stop.progressThreshold >= 1.0) return stop;
     if (stop.progressThreshold <= 0.0) return stop;
@@ -173,7 +305,6 @@ const generateStops = (coords: [number, number][], distanceKm: number, driverId:
 
 const initializeSimulation = (): DriverSimulation[] => {
   return MOCK_DRIVERS.map((driver, index) => {
-    // Generate origin further away for more interesting routes
     const start = {
       lat: MAP_CENTER[0] + (Math.random() - 0.5) * 5,
       lng: MAP_CENTER[1] + (Math.random() - 0.5) * 5
@@ -188,7 +319,7 @@ const initializeSimulation = (): DriverSimulation[] => {
       start,
       destination,
       destinationName: dest.name,
-      progress: Math.random() * 0.2, // Start early in the route
+      progress: Math.random() * 0.2,
       speed: 0.005 + Math.random() * 0.003,
       currentLat: start.lat,
       currentLng: start.lng,
@@ -204,7 +335,6 @@ const initializeSimulation = (): DriverSimulation[] => {
 
 const createTruckIcon = (risk: string, heading: number, isSelected: boolean) => {
   const color = risk === 'HIGH' ? 'var(--status-crit)' : (risk === 'MEDIUM' ? 'var(--status-warn)' : 'var(--status-ok)');
-  
   const truckSvg = `
     <svg width="16" height="16" viewBox="0 0 24 24" fill="${color}">
       <rect x="5" y="2" width="14" height="20" rx="3"/>
@@ -230,7 +360,6 @@ const createStopIcon = (type: string, isHighlighted: boolean, isActive: boolean)
   const color = isActive ? '#fff' : (isHighlighted ? 'var(--text-secondary)' : 'var(--text-tertiary)');
   const bg = isActive ? 'var(--accent)' : 'var(--bg-card)';
   
-  // Use simple SVG path representations for icons inside divIcon
   if (type === 'Fuel') {
     iconHtml = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2"><path d="M3 22h12"/><path d="M4 9h10v13H4z"/><path d="M20 22v-6c0-1.1-.9-2-2-2h-2"/><path d="M14 4h4a2 2 0 0 1 2 2v6"/></svg>`;
   } else if (type === 'Rest') {
@@ -305,14 +434,22 @@ type ActivityItem = {
 };
 
 type FleetFilter = 'ALL' | 'ON_ROUTE' | 'COMPLIANT' | 'ATTENTION' | 'HIGH_RISK' | 'OFFLINE';
-type TabState = 'OPERATIONS' | 'COMPLIANCE' | 'PRIVACY_AUDIT';
 
-// Subcomponents for Hackathon Judging
+interface ComplianceReceipt {
+  verificationId: string;
+  tripId: string;
+  driverName: string;
+  vehicleId: string;
+  timestamp: string;
+  status: 'VERIFIED' | 'REJECTED';
+  txHash: string;
+  policyName: string;
+}
 
+// Subcomponents
 const PrivacyBoundaryDiagram = () => (
   <div className="privacy-boundary-container">
     <div className="boundary-zones-wrapper">
-      {/* Private Zone */}
       <div className="boundary-zone zone-private">
         <div className="zone-header">
           <Lock size={14} />
@@ -334,14 +471,12 @@ const PrivacyBoundaryDiagram = () => (
         </div>
       </div>
 
-      {/* Divider */}
       <div className="boundary-divider">
         <ChevronRight size={18} />
         <span className="boundary-divider-badge">ZK PROOF BARRIER</span>
         <ChevronRight size={18} />
       </div>
 
-      {/* Public Zone */}
       <div className="boundary-zone zone-public">
         <div className="zone-header">
           <Server size={14} />
@@ -365,7 +500,7 @@ const PrivacyBoundaryDiagram = () => (
     </div>
 
     <div className="privacy-banner-statement">
-      <strong>🔒 Privacy Statement:</strong> The underlying private telemetry is not exposed as the verification result. Midnight evaluates the zero-knowledge assertion on-chain without revealing raw GPS coordinates or driver logs.
+      <strong>🔒 Privacy Statement:</strong> Private telemetry values are not included in the verification result or transaction. Midnight evaluates the zero-knowledge assertion on-chain without revealing raw GPS coordinates or driver logs.
     </div>
   </div>
 );
@@ -450,89 +585,61 @@ const ComplianceReceiptModal = ({ receipt, onClose, downloadReceiptJson, copyRec
                 {receipt.status}
               </span>
             </div>
-            <div className="receipt-field" style={{ gridColumn: 'span 2' }}>
-              <span className="receipt-label">Policy Assertion</span>
-              <span className="receipt-value" style={{ fontSize: '0.75rem' }}>{receipt.policyName}</span>
+            <div className="receipt-field">
+              <span className="receipt-label">Policy Verified</span>
+              <span className="receipt-value">{receipt.policyName}</span>
             </div>
             <div className="receipt-field">
               <span className="receipt-label">Timestamp</span>
-              <span className="receipt-value" style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}>{receipt.timestamp}</span>
+              <span className="receipt-value" style={{ fontFamily: 'var(--font-mono)' }}>{receipt.timestamp}</span>
             </div>
-            <div className="receipt-field">
-              <span className="receipt-label">Midnight Tx Hash</span>
-              <span className="receipt-value" style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}>
-                {receipt.txHash ? `${receipt.txHash.substring(0, 16)}...` : 'N/A'}
-              </span>
-            </div>
-            {receipt.rejectionReason && (
-              <div className="receipt-field" style={{ gridColumn: 'span 2' }}>
-                <span className="receipt-label" style={{ color: 'var(--status-crit)' }}>Rejection Reason</span>
-                <span className="receipt-value text-crit" style={{ fontSize: '0.75rem' }}>{receipt.rejectionReason}</span>
-              </div>
-            )}
           </div>
 
-          {/* Audit Steps Timeline */}
-          <div className="detail-section">
-            <div className="detail-section-title">VERIFICATION LIFECYCLE AUDIT</div>
-            <div className="compact-timeline">
-              {receipt.timeline.map((step, idx) => (
-                <div key={idx} className={`timeline-row ${step.status}`}>
-                  <div className="timeline-dot-wrapper">
-                    {step.status === 'completed' ? <Check size={10} /> : (step.status === 'rejected' ? <X size={10} color="var(--status-crit)" /> : <div className="timeline-dot" />)}
-                  </div>
-                  <div className="timeline-row-info">
-                    <div className="timeline-row-name">{step.stage}</div>
-                    <div className="timeline-row-sub">{step.detail} · {step.timestamp}</div>
-                  </div>
-                </div>
-              ))}
+          <div className="receipt-field" style={{ background: 'var(--ink-1)', padding: '0.875rem', borderRadius: '6px' }}>
+            <span className="receipt-label">Midnight Transaction Hash</span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.25rem' }}>
+              <span className="tx-hash" style={{ fontSize: '0.75rem' }}>{receipt.txHash}</span>
+              {receipt.txHash !== 'N/A' && (
+                <button 
+                  className="copy-btn-inline"
+                  onClick={() => {
+                    navigator.clipboard.writeText(receipt.txHash);
+                    setCopiedHash(true);
+                    setTimeout(() => setCopiedHash(false), 2000);
+                  }}
+                >
+                  {copiedHash ? 'COPIED!' : 'COPY HASH'}
+                </button>
+              )}
             </div>
           </div>
         </div>
 
         <div className="modal-footer-actions">
-          <button 
-            className="btn btn-secondary"
-            onClick={() => {
-              copyReceiptText(receipt);
-              setCopied(true);
-              setTimeout(() => setCopied(false), 2000);
-            }}
-          >
-            <Copy size={14} /> {copied ? 'COPIED!' : 'Copy Receipt'}
+          <button className="btn btn-secondary" onClick={() => { copyReceiptText(receipt); setCopied(true); setTimeout(() => setCopied(false), 2000); }}>
+            <Copy size={14} />
+            {copied ? 'Copied!' : 'Copy Summary'}
           </button>
-          <button className="btn btn-secondary" onClick={() => downloadReceiptJson(receipt)}>
-            <Download size={14} /> Download JSON
+          <button className="btn btn-primary" onClick={() => downloadReceiptJson(receipt)}>
+            <Download size={14} />
+            Download JSON
           </button>
-          {receipt.txHash && (
-            <button 
-              className="btn btn-primary" 
-              onClick={() => {
-                navigator.clipboard.writeText(receipt.txHash!);
-                setCopiedHash(true);
-                setTimeout(() => setCopiedHash(false), 2000);
-              }}
-            >
-              <ExternalLink size={14} /> {copiedHash ? 'HASH COPIED!' : 'Copy Tx Hash'}
-            </button>
-          )}
         </div>
       </div>
     </div>
   );
 };
 
-const IncidentInvestigationModal = ({ incident, onClose }: { incident: IncidentRecord; onClose: () => void }) => (
+const IncidentInvestigationModal = ({ incident, onClose }: { incident: { id: string; driverName: string; tripId: string; description: string; timestamp: Date; errorTrace?: string }; onClose: () => void }) => (
   <div className="modal-overlay" onClick={onClose}>
-    <div className="receipt-modal-card" style={{ maxWidth: '620px' }} onClick={e => e.stopPropagation()}>
-      <div className="modal-header-bar" style={{ backgroundColor: 'rgba(248, 81, 73, 0.1)', borderColor: 'rgba(248, 81, 73, 0.3)' }}>
+    <div className="receipt-modal-card" style={{ maxWidth: '600px' }} onClick={e => e.stopPropagation()}>
+      <div className="modal-header-bar" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)' }}>
         <div className="modal-title-group">
           <AlertOctagon size={20} color="var(--status-crit)" />
           <div>
-            <div className="modal-title-text" style={{ color: 'var(--status-crit)' }}>COMPLIANCE INCIDENT INVESTIGATION</div>
-            <div style={{ fontSize: '0.6875rem', color: 'var(--text-secondary)' }}>
-              Source of Truth: Midnight Contract Execution Assertion
+            <div className="modal-title-text" style={{ color: 'var(--status-crit)' }}>INCIDENT INVESTIGATION</div>
+            <div style={{ fontSize: '0.6875rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
+              INCIDENT ID: {incident.id}
             </div>
           </div>
         </div>
@@ -542,47 +649,32 @@ const IncidentInvestigationModal = ({ incident, onClose }: { incident: IncidentR
       <div className="receipt-modal-body">
         <div className="receipt-grid">
           <div className="receipt-field">
-            <span className="receipt-label">Vehicle Identifier</span>
-            <span className="receipt-value">{incident.vehicleId}</span>
+            <span className="receipt-label">Driver / Vehicle</span>
+            <span className="receipt-value">{incident.driverName} ({incident.tripId})</span>
           </div>
           <div className="receipt-field">
-            <span className="receipt-label">Driver Name</span>
-            <span className="receipt-value">{incident.driverName}</span>
-          </div>
-          <div className="receipt-field">
-            <span className="receipt-label">Trip Progress</span>
-            <span className="receipt-value">{incident.routeProgress}% complete</span>
-          </div>
-          <div className="receipt-field">
-            <span className="receipt-label">Driver State</span>
-            <span className="receipt-value text-accent">{incident.driverStatus}</span>
-          </div>
-          <div className="receipt-field">
-            <span className="receipt-label">Risk Classification</span>
-            <span className="receipt-value text-crit">{incident.risk}</span>
-          </div>
-          <div className="receipt-field">
-            <span className="receipt-label">Midnight Result</span>
-            <span className="badge badge-crit">REJECTED</span>
-          </div>
-          <div className="receipt-field" style={{ gridColumn: 'span 2' }}>
-            <span className="receipt-label" style={{ color: 'var(--status-crit)' }}>Actual Contract Rejection Reason</span>
-            <span className="receipt-value text-crit" style={{ fontSize: '0.875rem', fontFamily: 'var(--font-mono)' }}>
-              {incident.rejectionReason}
-            </span>
+            <span className="receipt-label">Timestamp</span>
+            <span className="receipt-value">{incident.timestamp.toLocaleString()}</span>
           </div>
         </div>
 
-        <div className="privacy-banner-statement" style={{ borderColor: 'var(--status-crit)', backgroundColor: 'rgba(248, 81, 73, 0.08)' }}>
-          <strong>🔍 Contextual Data Integrity:</strong> Operational telemetry and simulation route provide dispatcher context, while the local Midnight Zero-Knowledge proof evaluation remains the binding compliance result.
+        <div className="detail-section">
+          <div className="detail-section-title">INCIDENT SUMMARY</div>
+          <div style={{ fontSize: '0.8125rem', color: 'var(--text-primary)', lineHeight: 1.5, backgroundColor: 'var(--ink-1)', padding: '0.875rem', borderRadius: '6px' }}>
+            {incident.description}
+          </div>
         </div>
 
-        <div className="focus-block">
-          <div className="focus-header">
-            <span className="focus-tag" style={{ color: 'var(--status-warn)' }}>DISPATCH RECOMMENDED ACTION</span>
-          </div>
-          <div className="focus-title" style={{ fontSize: '0.8125rem' }}>
-            {incident.recommendedAction}
+        <div className="detail-section">
+          <div className="detail-section-title">MIDNIGHT CONTRACT ERROR TRACEBACK</div>
+          <div className="terminal" style={{ borderColor: 'rgba(239, 68, 68, 0.3)' }}>
+            <div className="terminal-header">
+              <span className="terminal-error">ASSERTION_FAILURE</span>
+              <span>tripverify.compact:38</span>
+            </div>
+            <div className="terminal-body terminal-error">
+              {incident.errorTrace || "Error: failed assert: Safety conditions not met, cannot verify trip"}
+            </div>
           </div>
         </div>
       </div>
@@ -595,14 +687,14 @@ const IncidentInvestigationModal = ({ incident, onClose }: { incident: IncidentR
 );
 
 const ReplayVerificationModal = ({ receipt, onClose }: { receipt: ComplianceReceipt; onClose: () => void }) => {
-  const [currentStep, setCurrentStep] = useState(0);
+  const [replayStep, setReplayStep] = useState(0);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentStep(prev => (prev < receipt.timeline.length - 1 ? prev + 1 : prev));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [receipt]);
+    const timer1 = setTimeout(() => setReplayStep(1), 1000);
+    const timer2 = setTimeout(() => setReplayStep(2), 2200);
+    const timer3 = setTimeout(() => setReplayStep(3), 3400);
+    return () => { clearTimeout(timer1); clearTimeout(timer2); clearTimeout(timer3); };
+  }, []);
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -611,339 +703,413 @@ const ReplayVerificationModal = ({ receipt, onClose }: { receipt: ComplianceRece
           <div className="modal-title-group">
             <RotateCcw size={18} color="var(--accent)" />
             <div>
-              <div className="modal-title-text">VERIFICATION REPLAY RUNNER</div>
-              <div className="badge badge-warn" style={{ marginTop: '0.25rem' }}>RECORDED REPLAY</div>
+              <div className="modal-title-text">DETERMINISTIC ZK REPLAY</div>
+              <div style={{ fontSize: '0.6875rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
+                REPLAYING RECORD {receipt.verificationId}
+              </div>
             </div>
           </div>
           <button className="detail-close-btn" onClick={onClose}><X size={16} /></button>
         </div>
 
         <div className="receipt-modal-body">
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-            Replaying recorded verification event for Vehicle {receipt.vehicleId} (Driver {receipt.driverName}).
+          <div className="zk-audit-trail">
+            <div className={`zk-audit-step ${replayStep >= 0 ? 'success' : ''}`}>
+              <div className="zk-step-left">
+                <HardDrive size={14} />
+                <span>1. FETCH WITNESS SNAPSHOT</span>
+              </div>
+              <span className="zk-step-status-chip">REPLAYED</span>
+            </div>
+            <div className={`zk-audit-step ${replayStep >= 1 ? 'success' : 'active'}`}>
+              <div className="zk-step-left">
+                {replayStep < 1 ? <div className="spinner-small" /> : <Lock size={14} />}
+                <span>2. RE-EXECUTE PROVER ENGINE</span>
+              </div>
+              <span className="zk-step-status-chip">{replayStep >= 1 ? 'MATCHED' : 'RUNNING...'}</span>
+            </div>
+            <div className={`zk-audit-step ${replayStep >= 2 ? 'success' : ''}`}>
+              <div className="zk-step-left">
+                {replayStep === 1 ? <div className="spinner-small" /> : <Server size={14} />}
+                <span>3. EVALUATE COMPACT CONTRACT</span>
+              </div>
+              <span className="zk-step-status-chip">{replayStep >= 2 ? 'MATCHED' : 'PENDING'}</span>
+            </div>
+            <div className={`zk-audit-step ${replayStep >= 3 ? (receipt.status === 'VERIFIED' ? 'success' : 'rejected') : ''}`}>
+              <div className="zk-step-left">
+                <ShieldCheck size={14} />
+                <span>4. VERIFY ON-CHAIN RESULT</span>
+              </div>
+              <span className="zk-step-status-chip">{replayStep >= 3 ? receipt.status : 'PENDING'}</span>
+            </div>
           </div>
 
-          <div className="compact-timeline">
-            {receipt.timeline.map((step, idx) => {
-              const isPast = idx < currentStep;
-              const isCurrent = idx === currentStep;
-              return (
-                <div key={idx} className={`timeline-row ${isPast ? 'completed' : ''} ${isCurrent ? 'active' : ''}`}>
-                  <div className="timeline-dot-wrapper">
-                    {isPast ? <Check size={10} /> : (isCurrent ? <div className="spinner-small" /> : <div className="timeline-dot" />)}
-                  </div>
-                  <div className="timeline-row-info">
-                    <div className="timeline-row-name">{step.stage}</div>
-                    <div className="timeline-row-sub">{step.detail}</div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {currentStep === receipt.timeline.length - 1 && (
-            <div className={`receipt-privacy-notice ${receipt.status === 'REJECTED' ? 'notice-crit' : ''}`}>
-              <ShieldCheck size={16} />
-              <span>Replay Complete: Verification Result was {receipt.status}</span>
+          {replayStep >= 3 && (
+            <div className="terminal" style={{ marginTop: '0.75rem' }}>
+              <div className="terminal-header">
+                <span className="terminal-success">✓ REPLAY VERIFICATION IDENTICAL</span>
+                <span className="terminal-success">DETERMINISTIC</span>
+              </div>
+              <div className="terminal-body" style={{ fontSize: '0.6875rem' }}>
+                Replay hash matched: {receipt.txHash.substring(0, 24)}...
+              </div>
             </div>
           )}
         </div>
 
         <div className="modal-footer-actions">
-          <button className="btn btn-secondary" onClick={() => setCurrentStep(0)}><RotateCcw size={14} /> Restart Replay</button>
-          <button className="btn btn-primary" onClick={onClose}>Close Replay</button>
+          <button className="btn btn-secondary" onClick={onClose}>Close Replay</button>
         </div>
       </div>
     </div>
   );
 };
 
-export interface AuditStep {
-  stage: string;
-  detail: string;
-  timestamp: string;
-  status: 'completed' | 'active' | 'pending' | 'rejected';
-}
-
-export interface ComplianceReceipt {
-  verificationId: string;
-  tripId: string;
-  driverName: string;
-  vehicleId: string;
-  policyName: string;
-  timestamp: string;
-  status: 'VERIFIED' | 'REJECTED';
-  txHash: string | null;
-  privacyStatement: string;
-  rejectionReason?: string;
-  timeline: AuditStep[];
-  driverStatusAtVerification: string;
-  riskAtVerification: string;
-}
-
-export interface IncidentRecord {
-  tripId: string;
-  driverName: string;
-  vehicleId: string;
-  routeProgress: number;
-  driverStatus: string;
-  risk: string;
-  rejectionReason: string;
-  timestamp: string;
-  recommendedAction: string;
-}
-
+// Main App Component
 function App() {
+  const [activeView, setActiveView] = useState<ViewMode>('OVERVIEW');
+  const [activeRole, setActiveRole] = useState<RoleMode>('Fleet Manager');
   const [activeTab, setActiveTab] = useState<TabState>('OPERATIONS');
+  
+  const [driverLocations, setDriverLocations] = useState<DriverSimulation[]>(initializeSimulation);
+  const [activeDriverId, setActiveDriverId] = useState<string | null>(null);
   const [status, setStatus] = useState<ZkState>('idle');
-  const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [txHash, setTxHash] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  
-  const [activeDriverId, setActiveDriverId] = useState<string | null>(null);
-  const [fleetFilter, setFleetFilter] = useState<FleetFilter>('ALL');
-  const [followMode, setFollowMode] = useState(false);
-  const [backendStatus, setBackendStatus] = useState<'connecting' | 'ready' | 'offline'>('connecting');
-  const [cmdPaletteOpen, setCmdPaletteOpen] = useState(false);
-  const [cmdQuery, setCmdQuery] = useState('');
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [copiedTx, setCopiedTx] = useState(false);
-  
-  // Hackathon Judging & Verification State
-  const [receiptsHistory, setReceiptsHistory] = useState<ComplianceReceipt[]>([]);
-  const [activeReceipt, setActiveReceipt] = useState<ComplianceReceipt | null>(null);
-  const [receiptModalOpen, setReceiptModalOpen] = useState<boolean>(false);
 
-  const [activeIncident, setActiveIncident] = useState<IncidentRecord | null>(null);
+  const [shipments, setShipments] = useState<Shipment[]>(INITIAL_SHIPMENTS);
+  const [incidents, setIncidents] = useState<IncidentItem[]>(INITIAL_INCIDENTS);
+  
+  const [activities, setActivities] = useState<ActivityItem[]>([
+    {
+      id: 'act-init-1',
+      type: 'system',
+      title: 'Enterprise Dispatch Initialized',
+      driverName: 'Fleet Command',
+      tripId: 'MS-84921',
+      description: '4 active rigs assigned to primary freight corridors.',
+      timestamp: new Date()
+    }
+  ]);
+  
+  const [receiptsHistory, setReceiptsHistory] = useState<ComplianceReceipt[]>([
+    {
+      verificationId: 'ZK-REC-9821',
+      tripId: 'MS-84922',
+      driverName: 'Sarah Chen',
+      vehicleId: 'MS-84922',
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      status: 'VERIFIED',
+      txHash: '5ac8fb98fec25d9174a7418d90e64293bc4b859759528a686139c9051020d425',
+      policyName: 'Midnight HOS & Speed Policy v1'
+    }
+  ]);
+
+  const [fleetFilter, setFleetFilter] = useState<FleetFilter>('ALL');
+  const [followMode, setFollowMode] = useState<boolean>(true);
+  const [cmdPaletteOpen, setCmdPaletteOpen] = useState<boolean>(false);
+  const [cmdQuery, setCmdQuery] = useState<string>('');
+  const [notificationsOpen, setNotificationsOpen] = useState<boolean>(false);
+  const [notifications] = useState<{ id: string; title: string; desc: string; time: string; type: 'alert' | 'info' }[]>([
+    { id: '1', title: 'Midnight Proof Generated', desc: 'Sarah Chen verified on Midnight ledger.', time: '2m ago', type: 'info' },
+    { id: '2', title: 'Settlement Ready', desc: 'Shipment SH-84922 is eligible for ₹3,800 payout.', time: '5m ago', type: 'info' },
+    { id: '3', title: 'Compliance Assertion Failed', desc: 'David Torres trip rejected on contract safety check.', time: '12m ago', type: 'alert' }
+  ]);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
+  const [backendStatus, setBackendStatus] = useState<'ready' | 'connecting' | 'offline'>('connecting');
+
+  const [demoScenario, setDemoScenario] = useState<'IDLE' | 'COMPLIANT' | 'HIGH_RISK' | 'REJECTED'>('IDLE');
+  const [presentationMode, setPresentationMode] = useState<boolean>(false);
+
+  const [receiptModalOpen, setReceiptModalOpen] = useState<boolean>(false);
+  const [activeReceipt, setActiveReceipt] = useState<ComplianceReceipt | null>(null);
+
   const [investigationModalOpen, setInvestigationModalOpen] = useState<boolean>(false);
+  const [activeIncident, setActiveIncident] = useState<{ id: string; driverName: string; tripId: string; description: string; timestamp: Date; errorTrace?: string } | null>(null);
 
   const [replayModalOpen, setReplayModalOpen] = useState<boolean>(false);
   const [replayReceipt, setReplayReceipt] = useState<ComplianceReceipt | null>(null);
 
-  const [demoScenario, setDemoScenario] = useState<'NONE' | 'COMPLIANT' | 'HIGH_RISK' | 'REJECTED'>('NONE');
-  const [presentationMode, setPresentationMode] = useState<boolean>(false);
-  
-  // Global Simulation State
   const [simulationSpeed, setSimulationSpeed] = useState<number>(1);
-  const [simulationTime, setSimulationTime] = useState<Date>(new Date(new Date().setHours(8, 0, 0, 0)));
+  const [simulationTime, setSimulationTime] = useState<Date>(new Date());
 
-  const notifications = [
-    { id: 1, type: 'alert', title: 'High Risk Detected', desc: 'MS-84924 velocity exceeding limits', time: '10m ago' },
-    { id: 2, type: 'info', title: 'Verification Completed', desc: 'MS-84921 compliance verified', time: '1h ago' },
-    { id: 3, type: 'alert', title: 'Fleet Offline', desc: 'Connection lost to Berlin Central node', time: '2h ago' }
-  ];
+  // Simulation Clock
+  useEffect(() => {
+    if (simulationSpeed === 0) return;
+    const interval = setInterval(() => {
+      setSimulationTime(prev => new Date(prev.getTime() + 1000 * simulationSpeed));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [simulationSpeed]);
 
-  // Command Palette Keyboard Listener
+  // Check Backend Status
+  useEffect(() => {
+    const checkBackend = async () => {
+      try {
+        const res = await fetch('http://127.0.0.1:4000/health');
+        if (res.ok) setBackendStatus('ready');
+        else setBackendStatus('offline');
+      } catch (err) {
+        setBackendStatus('offline');
+      }
+    };
+    checkBackend();
+    const interval = setInterval(checkBackend, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Keyboard shortcut Ctrl+K
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
         setCmdPaletteOpen(v => !v);
       }
-      if (e.key === 'Escape') setCmdPaletteOpen(false);
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const addActivity = (activity: Omit<ActivityItem, 'id' | 'timestamp'>) => {
-    setActivities(prev => [{
-      ...activity,
-      id: Math.random().toString(36).substr(2, 9),
-      timestamp: new Date()
-    }, ...prev]);
-  };
-
-
-
-  // Check backend health
+  // Fetch OSRM Road Routes once
   useEffect(() => {
-    const checkHealth = async () => {
-      try {
-        const res = await fetch('http://localhost:4000/health');
-        if (res.ok) setBackendStatus('ready');
-        else setBackendStatus('offline');
-      } catch (e) {
-        setBackendStatus('offline');
-      }
-    };
-    checkHealth();
-  }, []);
+    driverLocations.forEach((driver, index) => {
+      if (driver.osrmStatus !== 'pending') return;
 
-  // Map state for live simulation
-  const [driverLocations, setDriverLocations] = useState<DriverSimulation[]>(initializeSimulation);
-
-  // Fetch OSRM Routes
-  useEffect(() => {
-    let mounted = true;
-
-    const fetchRoutes = async () => {
-      const initialDrivers = initializeSimulation();
-      
-      for (const driver of initialDrivers) {
+      const fetchRoute = async () => {
         try {
           const url = `https://router.project-osrm.org/route/v1/driving/${driver.start.lng},${driver.start.lat};${driver.destination.lng},${driver.destination.lat}?overview=full&geometries=geojson`;
           const res = await fetch(url);
           const data = await res.json();
 
-          if (data.code === 'Ok' && data.routes && data.routes[0].geometry.coordinates) {
-            const coords: [number, number][] = data.routes[0].geometry.coordinates.map((c: number[]) => [c[1], c[0]]);
-            const distance = data.routes[0].distance / 1000;
-            const stops = generateStops(coords, distance, driver.id);
-            
-            if (!mounted) return;
-            setDriverLocations(prev => prev.map(d => 
-              d.id === driver.id 
-                ? { ...d, osrmStatus: 'ok', routeCoords: coords, distance, stops } 
-                : d
-            ));
-          } else {
-            if (!mounted) return;
-            setDriverLocations(prev => prev.map(d => d.id === driver.id ? { ...d, osrmStatus: 'failed' } : d));
+          if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
+            const geom = data.routes[0].geometry.coordinates;
+            const routeCoords: [number, number][] = geom.map((c: [number, number]) => [c[1], c[0]]);
+            const distanceKm = Math.round(data.routes[0].distance / 1000);
+            const generatedStops = generateStops(routeCoords, distanceKm, driver.id);
+
+            setDriverLocations(prev => prev.map((d, i) => i === index ? {
+              ...d,
+              routeCoords,
+              distance: distanceKm,
+              osrmStatus: 'ok',
+              stops: generatedStops
+            } : d));
           }
-        } catch (e) {
-          if (!mounted) return;
-          setDriverLocations(prev => prev.map(d => d.id === driver.id ? { ...d, osrmStatus: 'failed' } : d));
+        } catch (err) {
+          setDriverLocations(prev => prev.map((d, i) => i === index ? { ...d, osrmStatus: 'failed' } : d));
         }
-        await new Promise(r => setTimeout(r, 200));
-      }
-    };
+      };
+      fetchRoute();
+    });
+  }, [driverLocations]);
 
-    fetchRoutes();
-
-    return () => { mounted = false; };
-  }, []);
-
+  // Truck Movement Simulation
   useEffect(() => {
-    if (simulationSpeed === 0) return; // Paused
-
-    const tickMs = 1000; // physical tick is 1s
-
+    if (simulationSpeed === 0) return;
     const interval = setInterval(() => {
-      const simulatedElapsedMs = tickMs * simulationSpeed;
-      
-      setSimulationTime(prev => new Date(prev.getTime() + simulatedElapsedMs));
-
-      setDriverLocations(prev => {
-        const newActivities: any[] = [];
+      setDriverLocations(prev => prev.map(driver => {
+        if (driver.routeCoords.length === 0) return driver;
         
-        const next = prev.map(driver => {
-          let newProgress = driver.progress;
-          let newStatus = driver.driverStatus;
-          const updatedStops = [...driver.stops];
-          
-          // Check for active stops
-          const activeStopIndex = updatedStops.findIndex(s => s.status === 'active');
-          
-          if (activeStopIndex !== -1) {
-            // We are currently at a stop, tick down its duration
-            const stop = updatedStops[activeStopIndex];
-            stop.remainingMs -= simulatedElapsedMs;
-            
-            if (stop.remainingMs <= 0) {
-              stop.status = 'completed';
-              stop.remainingMs = 0;
-              newStatus = 'DRIVING';
-              newActivities.push({
-                type: 'system', title: `Completed: ${stop.name}`, driverName: driver.name, tripId: driver.id,
-                description: `Vehicle resumed journey.`, timestamp: new Date()
-              });
-            }
-          } else if (newStatus === 'ARRIVED') {
-            // Already arrived, do nothing
-          } else {
-            // We are DRIVING. Move progress forward.
-            // A truck driving at ~80km/h (22.2 m/s) covers distance depending on speed
-            const distanceCoveredKm = (80 * (simulatedElapsedMs / 3600000)); 
-            const progressDelta = driver.distance > 0 ? (distanceCoveredKm / driver.distance) : driver.speed;
-            newProgress += progressDelta;
-            
-            if (newProgress >= 1) {
-              newProgress = 1;
-            }
+        let newProgress = driver.progress + (driver.speed * 0.05 * simulationSpeed);
+        if (newProgress >= 1.0) newProgress = 0.0; // Loop trip
 
-            // Check if we hit any pending stops with our new progress
-            for (let i = 0; i < updatedStops.length; i++) {
-              const stop = updatedStops[i];
-              if (stop.status === 'pending' && newProgress >= stop.progressThreshold) {
-                // We reached this stop! Snap to its exact location.
-                newProgress = stop.progressThreshold;
-                if (stop.type === 'Destination') {
-                  newStatus = 'ARRIVED';
-                  stop.status = 'completed';
-                  newActivities.push({
-                    type: 'system', title: 'Arrived at Destination', driverName: driver.name, tripId: driver.id,
-                    description: `Vehicle arrived at ${stop.name}`, timestamp: new Date()
-                  });
-                } else {
-                  stop.status = 'active';
-                  newStatus = stop.type === 'Rest' ? 'RESTING' : (stop.type === 'Fuel' ? 'REFUELING' : (stop.type === 'Delivery' ? 'DELIVERING' : 'AT_SERVICE'));
-                  newActivities.push({
-                    type: 'system', title: `Stopped: ${stop.name}`, driverName: driver.name, tripId: driver.id,
-                    description: `Vehicle entered ${stop.type} stop.`, timestamp: new Date()
-                  });
-                }
-                break; // Only trigger one stop per tick
-              }
-            }
+        const { lat, lng, heading } = interpolateRoute(driver.routeCoords, newProgress);
+
+        let driverStatus: DriverStatus = 'DRIVING';
+        const updatedStops = driver.stops.map(stop => {
+          if (Math.abs(newProgress - stop.progressThreshold) < 0.03) {
+            if (stop.type === 'Rest') driverStatus = 'RESTING';
+            else if (stop.type === 'Fuel') driverStatus = 'REFUELING';
+            else if (stop.type === 'Delivery') driverStatus = 'DELIVERING';
+            return { ...stop, status: 'active' as const };
+          } else if (newProgress > stop.progressThreshold) {
+            return { ...stop, status: 'completed' as const };
           }
-
-          const { lat, lng, heading } = interpolateRoute(driver.routeCoords, newProgress);
-
-          return {
-            ...driver,
-            progress: newProgress,
-            driverStatus: newStatus,
-            stops: updatedStops,
-            heading,
-            currentLat: lat,
-            currentLng: lng
-          };
+          return stop;
         });
 
-        if (newActivities.length > 0) {
-          setActivities(a => [...newActivities.map(act => ({ ...act, id: Math.random().toString(36).substr(2, 9) })), ...a]);
-        }
-
-        return next;
-      });
-    }, tickMs); 
+        return {
+          ...driver,
+          progress: newProgress,
+          currentLat: lat,
+          currentLng: lng,
+          heading,
+          driverStatus,
+          stops: updatedStops
+        };
+      }));
+    }, 1000);
     return () => clearInterval(interval);
   }, [simulationSpeed]);
 
-  const filteredDrivers = driverLocations.filter(driver => {
-    if (fleetFilter === 'ALL') return true;
-    if (fleetFilter === 'ON_ROUTE') return true;
-    if (fleetFilter === 'COMPLIANT') return driver.risk === 'LOW';
-    if (fleetFilter === 'ATTENTION') return driver.risk === 'MEDIUM';
-    if (fleetFilter === 'HIGH_RISK') return driver.risk === 'HIGH';
-    if (fleetFilter === 'OFFLINE') return false;
-    return true;
-  });
+  // Run Real Midnight ZK Verification
+  const runVerification = async (driver: DriverSimulation, forceFailure = false) => {
+    setStatus('generating');
+    setTxHash(null);
+    setErrorMsg(null);
+
+    const logActivity = (type: ActivityItem['type'], title: string, desc: string, hash?: string) => {
+      setActivities(prev => [
+        {
+          id: `act-${Date.now()}-${Math.random()}`,
+          type,
+          title,
+          driverName: driver.name,
+          tripId: driver.id,
+          description: desc,
+          timestamp: new Date(),
+          txHash: hash
+        },
+        ...prev
+      ]);
+    };
+
+    logActivity('generating', 'Generating ZK Witness Proof', `Computing continuous HOS and speed proof for ${driver.name} (${driver.id})...`);
+
+    setTimeout(async () => {
+      setStatus('verifying');
+      logActivity('verifying', 'Submitting Proof to Midnight', 'Evaluating contract safety conditions on-chain...');
+
+      try {
+        const payload = {
+          tripId: driver.id,
+          driverName: driver.name,
+          safetyConditionsMet: forceFailure ? false : (driver.score > 50),
+          averageSpeedKmH: forceFailure ? 115 : (driver.score > 50 ? 68 : 94),
+          restStopsCompleted: forceFailure ? 0 : 2
+        };
+
+        const res = await fetch('http://127.0.0.1:4000/verify-trip', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          setStatus('success');
+          setTxHash(data.txHash);
+          logActivity('verified', 'Compliance Verified on Midnight', `On-chain proof confirmed. Tx Hash: ${data.txHash.substring(0, 16)}...`, data.txHash);
+
+          const newReceipt: ComplianceReceipt = {
+            verificationId: `ZK-REC-${Math.floor(1000 + Math.random() * 9000)}`,
+            tripId: driver.id,
+            driverName: driver.name,
+            vehicleId: driver.id,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            status: 'VERIFIED',
+            txHash: data.txHash,
+            policyName: 'Midnight HOS & Speed Policy v1'
+          };
+
+          setReceiptsHistory(prev => [newReceipt, ...prev]);
+          setActiveReceipt(newReceipt);
+          setReceiptModalOpen(true);
+
+          // Update Shipment State & Settlement Eligibility
+          setShipments(prev => prev.map(s => s.vehicleId === driver.id ? {
+            ...s,
+            complianceState: 'VERIFIED',
+            settlementStatus: 'READY_FOR_APPROVAL',
+            txHash: data.txHash
+          } : s));
+
+        } else {
+          setStatus('error');
+          const errText = data.error || 'Contract assertion failed: Safety conditions not met';
+          setErrorMsg(errText);
+          logActivity('rejected', 'Compliance Assertion Rejected', `Verification failed: ${errText}`);
+
+          const newReceipt: ComplianceReceipt = {
+            verificationId: `ZK-REC-${Math.floor(1000 + Math.random() * 9000)}`,
+            tripId: driver.id,
+            driverName: driver.name,
+            vehicleId: driver.id,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            status: 'REJECTED',
+            txHash: 'N/A',
+            policyName: 'Midnight HOS & Speed Policy v1'
+          };
+
+          setReceiptsHistory(prev => [newReceipt, ...prev]);
+          setShipments(prev => prev.map(s => s.vehicleId === driver.id ? { ...s, complianceState: 'REJECTED' } : s));
+
+          // Log Incident
+          const newIncident: IncidentItem = {
+            id: `INC-${Math.floor(100 + Math.random() * 900)}`,
+            vehicleId: driver.id,
+            driverName: driver.name,
+            shipmentId: `SH-${driver.id.split('-')[1] || '84921'}`,
+            type: 'COMPLIANCE_REJECTED',
+            severity: 'Critical',
+            title: 'Midnight ZK Compliance Rejected',
+            description: errText,
+            timestamp: new Date(),
+            resolved: false
+          };
+          setIncidents(prev => [newIncident, ...prev]);
+        }
+      } catch (err) {
+        setStatus('error');
+        const errText = 'Failed to connect to local Midnight ZK verification backend API (localhost:4000)';
+        setErrorMsg(errText);
+        logActivity('rejected', 'Verification API Offline', errText);
+      }
+    }, 1800);
+  };
+
+  const handleTriggerDemoScenario = (scenario: 'COMPLIANT' | 'HIGH_RISK' | 'REJECTED') => {
+    setDemoScenario(scenario);
+    if (scenario === 'COMPLIANT') {
+      const driver = driverLocations.find(d => d.risk === 'LOW') || driverLocations[1];
+      setActiveDriverId(driver.id);
+      setActiveView('OPERATIONS');
+      runVerification(driver, false);
+    } else if (scenario === 'HIGH_RISK') {
+      const driver = driverLocations.find(d => d.risk === 'HIGH') || driverLocations[0];
+      setActiveDriverId(driver.id);
+      setActiveView('OPERATIONS');
+    } else if (scenario === 'REJECTED') {
+      const driver = driverLocations[0];
+      setActiveDriverId(driver.id);
+      setActiveView('OPERATIONS');
+      runVerification(driver, true);
+    }
+  };
+
+  const approveSettlement = (shipmentId: string) => {
+    setShipments(prev => prev.map(s => s.id === shipmentId ? { ...s, settlementStatus: 'APPROVED' } : s));
+    const sh = shipments.find(s => s.id === shipmentId);
+    if (sh) {
+      setActivities(prev => [
+        {
+          id: `act-set-${Date.now()}`,
+          type: 'verified',
+          title: 'Settlement Payout Approved',
+          driverName: sh.driverName,
+          tripId: sh.id,
+          description: `Financial payout of ₹${sh.payoutAmount.toLocaleString()} approved for delivered shipment ${sh.id}.`,
+          timestamp: new Date(),
+          txHash: sh.txHash
+        },
+        ...prev
+      ]);
+    }
+  };
 
   const downloadReceiptJson = (receipt: ComplianceReceipt) => {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(receipt, null, 2));
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `FleetShield_Receipt_${receipt.verificationId}.json`);
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
+    const jsonStr = JSON.stringify(receipt, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `fleetshield-receipt-${receipt.verificationId}.json`;
+    a.click();
   };
 
   const copyReceiptText = (receipt: ComplianceReceipt) => {
-    const text = `FLEETSHIELD ZK COMPLIANCE RECEIPT
-Verification ID: ${receipt.verificationId}
-Trip ID: ${receipt.tripId}
-Driver: ${receipt.driverName}
-Vehicle: ${receipt.vehicleId}
-Policy Name: ${receipt.policyName}
-Timestamp: ${receipt.timestamp}
-Result: ${receipt.status}
-Midnight Tx Hash: ${receipt.txHash || 'N/A'}
-Privacy Notice: ${receipt.privacyStatement}
-${receipt.rejectionReason ? `Rejection Reason: ${receipt.rejectionReason}` : ''}`;
+    const text = `FLEETSHIELD ZK COMPLIANCE RECEIPT\nVerification ID: ${receipt.verificationId}\nTrip ID: ${receipt.tripId}\nDriver: ${receipt.driverName}\nResult: ${receipt.status}\nMidnight Tx: ${receipt.txHash}\nPrivacy: Private telemetry values are not included in the verification result.`;
     navigator.clipboard.writeText(text);
   };
 
@@ -952,241 +1118,25 @@ ${receipt.rejectionReason ? `Rejection Reason: ${receipt.rejectionReason}` : ''}
     setReplayModalOpen(true);
   };
 
+  const selectedDriver = driverLocations.find(d => d.id === activeDriverId);
+  const filteredDrivers = driverLocations.filter(driver => {
+    if (fleetFilter === 'ALL') return true;
+    if (fleetFilter === 'ON_ROUTE') return driver.driverStatus === 'DRIVING';
+    if (fleetFilter === 'COMPLIANT') return driver.risk === 'LOW';
+    if (fleetFilter === 'ATTENTION') return driver.risk === 'MEDIUM';
+    if (fleetFilter === 'HIGH_RISK') return driver.risk === 'HIGH';
+    return true;
+  });
 
-  const runVerification = async (driver: typeof MOCK_DRIVERS[0], valid: boolean) => {
-    setStatus('generating');
-    setTxHash(null);
-    setErrorMsg(null);
-
-    const nowStr = new Date().toLocaleTimeString();
-    const verifId = `FS-ZK-${Math.floor(100000 + Math.random() * 900000)}`;
-
-    addActivity({
-      type: 'initiated',
-      title: 'Verification initiated',
-      driverName: driver.name,
-      tripId: driver.id,
-      description: 'Operator triggered compliance check'
-    });
-
-    setTimeout(() => {
-      addActivity({
-        type: 'generating',
-        title: 'ZK proof generation',
-        driverName: driver.name,
-        tripId: driver.id,
-        description: 'Private compliance proof generating'
-      });
-    }, 400);
-
-    try {
-      const response = await fetch('http://localhost:4000/verify-trip', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tripId: 'MS-84921', safetyConditionsMet: valid })
-      });
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        setStatus('verifying');
-        addActivity({
-          type: 'completed',
-          title: 'Midnight verification completed',
-          driverName: driver.name,
-          tripId: driver.id,
-          description: 'Evaluating on-chain assertion'
-        });
-
-        setTimeout(() => {
-          setTxHash(data.txHash);
-          setStatus('success');
-
-          const newReceipt: ComplianceReceipt = {
-            verificationId: verifId,
-            tripId: driver.id,
-            driverName: driver.name,
-            vehicleId: `Vehicle ${driver.id.split('-')[1] || driver.id}`,
-            policyName: 'Midnight Hours-of-Service & Route Compliance Assertion',
-            timestamp: nowStr,
-            status: 'VERIFIED',
-            txHash: data.txHash,
-            privacyStatement: 'Private telemetry values are not included in the verification result or transaction.',
-            driverStatusAtVerification: driverLocations.find(d => d.id === driver.id)?.driverStatus || 'DRIVING',
-            riskAtVerification: driver.risk,
-            timeline: [
-              { stage: 'Verification Requested', detail: 'Operator triggered verification request', timestamp: nowStr, status: 'completed' },
-              { stage: 'Proof Processing', detail: 'Local witness evaluated locally', timestamp: nowStr, status: 'completed' },
-              { stage: 'Midnight Verification', detail: 'Zero-Knowledge contract assertions verified', timestamp: nowStr, status: 'completed' },
-              { stage: 'Result Finalized', detail: 'Immutable assertion verified on-chain', timestamp: nowStr, status: 'completed' }
-            ]
-          };
-
-          setReceiptsHistory(prev => [newReceipt, ...prev]);
-          setActiveReceipt(newReceipt);
-          setReceiptModalOpen(true);
-
-          addActivity({
-            type: 'verified',
-            title: 'Compliance verified',
-            driverName: driver.name,
-            tripId: driver.id,
-            description: 'Midnight ZK verification completed successfully',
-            txHash: data.txHash
-          });
-        }, 1200);
-      } else {
-        setStatus('verifying');
-        addActivity({
-          type: 'completed',
-          title: 'Midnight verification completed',
-          driverName: driver.name,
-          tripId: driver.id,
-          description: 'Evaluating on-chain assertion'
-        });
-
-        setTimeout(() => {
-          const reason = data.error || 'Safety conditions not met';
-          setErrorMsg(reason);
-          setStatus('error');
-
-          const newReceipt: ComplianceReceipt = {
-            verificationId: verifId,
-            tripId: driver.id,
-            driverName: driver.name,
-            vehicleId: `Vehicle ${driver.id.split('-')[1] || driver.id}`,
-            policyName: 'Midnight Hours-of-Service & Route Compliance Assertion',
-            timestamp: nowStr,
-            status: 'REJECTED',
-            txHash: null,
-            rejectionReason: reason,
-            privacyStatement: 'Private telemetry values are not included in the verification result or transaction.',
-            driverStatusAtVerification: driverLocations.find(d => d.id === driver.id)?.driverStatus || 'DRIVING',
-            riskAtVerification: driver.risk,
-            timeline: [
-              { stage: 'Verification Requested', detail: 'Operator triggered verification request', timestamp: nowStr, status: 'completed' },
-              { stage: 'Proof Processing', detail: 'Local witness evaluated locally', timestamp: nowStr, status: 'completed' },
-              { stage: 'Midnight Verification', detail: 'Zero-Knowledge contract assertion evaluated', timestamp: nowStr, status: 'completed' },
-              { stage: 'Result Finalized', detail: `Compliance rejected: ${reason}`, timestamp: nowStr, status: 'rejected' }
-            ]
-          };
-
-          const incident: IncidentRecord = {
-            tripId: driver.id,
-            driverName: driver.name,
-            vehicleId: `Vehicle ${driver.id.split('-')[1] || driver.id}`,
-            routeProgress: Math.round((driverLocations.find(d => d.id === driver.id)?.progress || 0.42) * 100),
-            driverStatus: driverLocations.find(d => d.id === driver.id)?.driverStatus.replace('_', ' ') || 'DRIVING',
-            risk: driver.risk,
-            rejectionReason: reason,
-            timestamp: nowStr,
-            recommendedAction: 'Review trip compliance before dispatch continuation.'
-          };
-
-          setReceiptsHistory(prev => [newReceipt, ...prev]);
-          setActiveReceipt(newReceipt);
-          setActiveIncident(incident);
-          setInvestigationModalOpen(true);
-
-          addActivity({
-            type: 'rejected',
-            title: 'Compliance rejected',
-            driverName: driver.name,
-            tripId: driver.id,
-            description: reason
-          });
-        }, 1200);
-      }
-    } catch (e: any) {
-      setStatus('verifying');
-      addActivity({
-        type: 'completed',
-        title: 'Midnight verification completed',
-        driverName: driver.name,
-        tripId: driver.id,
-        description: 'Evaluating on-chain assertion'
-      });
-
-      setTimeout(() => {
-        const reason = e.message || "Failed to reach API server.";
-        setErrorMsg(reason);
-        setStatus('error');
-
-        const newReceipt: ComplianceReceipt = {
-          verificationId: verifId,
-          tripId: driver.id,
-          driverName: driver.name,
-          vehicleId: `Vehicle ${driver.id.split('-')[1] || driver.id}`,
-          policyName: 'Midnight Hours-of-Service & Route Compliance Assertion',
-          timestamp: nowStr,
-          status: 'REJECTED',
-          txHash: null,
-          rejectionReason: reason,
-          privacyStatement: 'Private telemetry values are not included in the verification result or transaction.',
-          driverStatusAtVerification: driverLocations.find(d => d.id === driver.id)?.driverStatus || 'DRIVING',
-          riskAtVerification: driver.risk,
-          timeline: [
-            { stage: 'Verification Requested', detail: 'Operator triggered verification request', timestamp: nowStr, status: 'completed' },
-            { stage: 'Proof Processing', detail: 'Local witness evaluated locally', timestamp: nowStr, status: 'completed' },
-            { stage: 'Midnight Verification', detail: 'Zero-Knowledge contract assertion evaluated', timestamp: nowStr, status: 'completed' },
-            { stage: 'Result Finalized', detail: `Compliance rejected: ${reason}`, timestamp: nowStr, status: 'rejected' }
-          ]
-        };
-
-        const incident: IncidentRecord = {
-          tripId: driver.id,
-          driverName: driver.name,
-          vehicleId: `Vehicle ${driver.id.split('-')[1] || driver.id}`,
-          routeProgress: Math.round((driverLocations.find(d => d.id === driver.id)?.progress || 0.42) * 100),
-          driverStatus: driverLocations.find(d => d.id === driver.id)?.driverStatus.replace('_', ' ') || 'DRIVING',
-          risk: driver.risk,
-          rejectionReason: reason,
-          timestamp: nowStr,
-          recommendedAction: 'Review trip compliance before dispatch continuation.'
-        };
-
-        setReceiptsHistory(prev => [newReceipt, ...prev]);
-        setActiveReceipt(newReceipt);
-        setActiveIncident(incident);
-        setInvestigationModalOpen(true);
-
-        addActivity({
-          type: 'rejected',
-          title: 'Compliance rejected',
-          driverName: driver.name,
-          tripId: driver.id,
-          description: reason
-        });
-      }, 1200);
-    }
-  };
-
-  const handleTriggerDemoScenario = async (scenario: 'COMPLIANT' | 'HIGH_RISK' | 'REJECTED') => {
-    setDemoScenario(scenario);
-    if (scenario === 'COMPLIANT') {
-      const driver = driverLocations.find(d => d.id === 'MS-84922') || driverLocations[0];
-      setActiveDriverId(driver.id);
-      setActiveTab('OPERATIONS');
-      setFollowMode(true);
-      runVerification(driver, true);
-    } else if (scenario === 'HIGH_RISK') {
-      const driver = driverLocations.find(d => d.id === 'MS-84921') || driverLocations[0];
-      setActiveDriverId(driver.id);
-      setFleetFilter('HIGH_RISK');
-      setActiveTab('OPERATIONS');
-      setFollowMode(true);
-    } else if (scenario === 'REJECTED') {
-      const driver = driverLocations.find(d => d.id === 'MS-84921') || driverLocations[0];
-      setActiveDriverId(driver.id);
-      setActiveTab('OPERATIONS');
-      runVerification(driver, false);
-    }
-  };
-
+  const pendingVerificationsCount = shipments.filter(s => s.complianceState === 'PENDING').length;
+  const pendingSettlementsCount = shipments.filter(s => s.settlementStatus === 'READY_FOR_APPROVAL').length;
+  const pendingSettlementTotal = shipments
+    .filter(s => s.settlementStatus === 'READY_FOR_APPROVAL')
+    .reduce((sum, s) => sum + s.payoutAmount, 0);
 
   return (
     <div className="app-layout">
-      {/* App Shell Header */}
+      {/* Top Enterprise Header */}
       <header className="app-header">
         <div className="header-brand">
           <div className="brand-logo">
@@ -1196,16 +1146,18 @@ ${receipt.rejectionReason ? `Rejection Reason: ${receipt.rejectionReason}` : ''}
 
           <div className="header-divider hide-on-mobile" />
 
-          {/* Operator Modes Navigation */}
+          {/* Primary View Navigation */}
           <nav className="header-nav hide-on-mobile">
-            <div className={`nav-item ${activeTab === 'OPERATIONS' ? 'active' : ''}`} onClick={() => setActiveTab('OPERATIONS')}>Operations</div>
-            <div className={`nav-item ${activeTab === 'COMPLIANCE' ? 'active' : ''}`} onClick={() => setActiveTab('COMPLIANCE')}>Compliance</div>
-            <div className={`nav-item ${activeTab === 'PRIVACY_AUDIT' ? 'active' : ''}`} onClick={() => setActiveTab('PRIVACY_AUDIT')}>Privacy Audit</div>
+            <div className={`nav-item ${activeView === 'OVERVIEW' ? 'active' : ''}`} onClick={() => setActiveView('OVERVIEW')}>Overview</div>
+            <div className={`nav-item ${activeView === 'OPERATIONS' ? 'active' : ''}`} onClick={() => setActiveView('OPERATIONS')}>Operations</div>
+            <div className={`nav-item ${activeView === 'SHIPMENTS' ? 'active' : ''}`} onClick={() => setActiveView('SHIPMENTS')}>Shipments</div>
+            <div className={`nav-item ${activeView === 'COMPLIANCE' ? 'active' : ''}`} onClick={() => setActiveView('COMPLIANCE')}>Compliance</div>
+            <div className={`nav-item ${activeView === 'SETTLEMENTS' ? 'active' : ''}`} onClick={() => setActiveView('SETTLEMENTS')}>Settlements</div>
           </nav>
         </div>
         
         <div className="header-actions-group">
-          {/* Demo scenarios */}
+          {/* Demo Scenarios */}
           <div className="demo-bar hide-on-mobile">
             <button className={`demo-chip ${demoScenario === 'COMPLIANT' ? 'active' : ''}`} onClick={() => handleTriggerDemoScenario('COMPLIANT')}>Compliant</button>
             <button className={`demo-chip ${demoScenario === 'HIGH_RISK' ? 'active' : ''}`} onClick={() => handleTriggerDemoScenario('HIGH_RISK')}>High Risk</button>
@@ -1214,7 +1166,7 @@ ${receipt.rejectionReason ? `Rejection Reason: ${receipt.rejectionReason}` : ''}
 
           <div className="header-divider hide-on-mobile" />
 
-          {/* Sim controls */}
+          {/* Sim Controls */}
           <div className="sim-controls hide-on-mobile">
             <span className="sim-time">{simulationTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
             <div className="sim-btn-group">
@@ -1227,9 +1179,9 @@ ${receipt.rejectionReason ? `Rejection Reason: ${receipt.rejectionReason}` : ''}
 
           <div className="header-divider hide-on-mobile" />
 
-          {/* Runtime indicators */}
-          <span className="chip chip-sim hide-on-mobile">Simulation</span>
-          <span className="chip chip-live hide-on-mobile">Live ZK</span>
+          {/* Runtime Indicators */}
+          <span className="chip chip-sim hide-on-mobile">SIMULATION</span>
+          <span className="chip chip-live hide-on-mobile">LIVE MIDNIGHT ZK</span>
 
           {/* Presentation Mode */}
           <button 
@@ -1246,7 +1198,7 @@ ${receipt.rejectionReason ? `Rejection Reason: ${receipt.rejectionReason}` : ''}
             <span>Search</span>
             <span className="kbd">⌘K</span>
           </button>
-          
+
           <div style={{ position: 'relative' }}>
             <button className="notification-trigger" onClick={() => setNotificationsOpen(v => !v)}>
               <Bell size={15} />
@@ -1284,594 +1236,824 @@ ${receipt.rejectionReason ? `Rejection Reason: ${receipt.rejectionReason}` : ''}
               {backendStatus === 'ready' ? 'Online' : backendStatus === 'connecting' ? 'Connecting' : 'Offline'}
             </span>
           </div>
-          
+
           <button className="notification-trigger show-on-mobile-only" onClick={() => setMobileMenuOpen(v => !v)}>
             <Menu size={17} />
           </button>
         </div>
       </header>
 
-      {/* Main Split Workspace */}
-      <main className={`app-workspace ${activeDriverId ? 'workspace-details-open' : ''}`}>
+      {/* Main Workspace Body */}
+      <main className="app-workspace" style={{ display: 'flex', flexDirection: 'row', width: '100%', height: 'calc(100% - 50px)' }}>
         
-        {/* Left Data Panel */}
-        <aside className={`side-panel ${mobileMenuOpen ? 'mobile-open' : ''}`}>
-          
-          <div className="side-panel-tabs">
-            <div className={`sp-tab ${activeTab === 'OPERATIONS' ? 'active' : ''}`} onClick={() => setActiveTab('OPERATIONS')}>Fleet</div>
-            <div className={`sp-tab ${activeTab === 'COMPLIANCE' ? 'active' : ''}`} onClick={() => setActiveTab('COMPLIANCE')}>Activity</div>
+        {/* Enterprise Navigation Sidebar */}
+        <aside className="enterprise-sidebar">
+          <div className="role-switcher-container">
+            <div className="role-switcher-header">
+              <span className="role-label">DEMO ROLE</span>
+              <select 
+                value={activeRole} 
+                onChange={(e) => {
+                  const role = e.target.value as RoleMode;
+                  setActiveRole(role);
+                  if (role === 'Fleet Manager') setActiveView('OVERVIEW');
+                  else if (role === 'Dispatcher') setActiveView('SHIPMENTS');
+                  else if (role === 'Compliance Officer') setActiveView('COMPLIANCE');
+                  else if (role === 'Finance') setActiveView('SETTLEMENTS');
+                }}
+                className="role-select"
+              >
+                <option value="Fleet Manager">Fleet Manager</option>
+                <option value="Dispatcher">Dispatcher</option>
+                <option value="Compliance Officer">Compliance Officer</option>
+                <option value="Finance">Finance</option>
+              </select>
+            </div>
           </div>
-          
-          {activeTab === 'OPERATIONS' && (
-            <div className="panel-section">
-              <div className="section-header">
-                <h2 className="section-title">Vehicles</h2>
-                <div className="section-meta">{driverLocations.length} ACTIVE</div>
-              </div>
 
-              <div className="filter-tabs">
-                {(['ALL', 'ON_ROUTE', 'COMPLIANT', 'ATTENTION', 'HIGH_RISK', 'OFFLINE'] as FleetFilter[]).map(f => (
-                  <button 
-                    key={f} 
-                    className={`filter-tab ${fleetFilter === f ? 'active' : ''}`}
-                    onClick={() => setFleetFilter(f)}
-                  >
-                    {f.replace('_', ' ')}
-                  </button>
-                ))}
-              </div>
-              
-              <div className="data-table">
-                <div className="table-header">
-                  <div>DRIVER / ID</div>
-                  <div>STATUS</div>
-                  <div style={{ textAlign: 'right' }}>SCORE</div>
-                </div>
-                
-                {filteredDrivers.length === 0 ? (
-                  <div className="table-empty">No vehicles match this filter</div>
-                ) : (
-                  filteredDrivers.map(driver => (
-                    <div 
-                      key={driver.id} 
-                      className={`table-row ${activeDriverId === driver.id ? 'selected' : ''}`}
-                      onClick={() => {
-                        setActiveDriverId(driver.id);
-                        if (status !== 'idle') setStatus('idle');
-                      }}
-                    >
-                      <div className="cell-entity">
-                        <span className="entity-name">{driver.name}</span>
-                        <span className="entity-sub">Vehicle {driver.id.split('-')[1]} · {driver.driverStatus.replace('_', ' ')}</span>
-                      </div>
-                      <div className="cell-status">
-                        <span className={`badge ${driver.risk === 'HIGH' ? 'badge-crit' : (driver.risk === 'MEDIUM' ? 'badge-warn' : 'badge-ok')}`}>
-                          {driver.risk === 'LOW' ? 'COMPLIANT' : driver.risk}
-                        </span>
-                      </div>
-                      <div className="cell-metric">{driver.score}</div>
-                    </div>
-                  ))
-                )}
-              </div>
+          <div className="sidebar-nav-groups">
+            <div className="sidebar-group">
+              <div className="sidebar-group-title">OVERVIEW</div>
+              <button className={`sidebar-item ${activeView === 'OVERVIEW' ? 'active' : ''}`} onClick={() => setActiveView('OVERVIEW')}>
+                <LayoutDashboard size={15} />
+                <span>Executive Overview</span>
+              </button>
             </div>
-          )}
-          
-          {activeTab === 'COMPLIANCE' && (
-            <div className="panel-section activity-section" style={{ borderBottom: 'none', height: '100%' }}>
-              <div className="section-header">
-                <h2 className="section-title">Compliance History</h2>
-                <div className="section-meta">IMMUTABLE LOGS</div>
-              </div>
-              
-              <div className="activity-feed">
-                {activities.length === 0 ? (
-                  <div className="activity-empty-state">
-                    <div className="empty-title">No recent activity</div>
-                    <div className="empty-desc">Fleet compliance events will appear here as they occur.</div>
-                  </div>
-                ) : (
-                  activities.map((item, index) => (
-                    <div key={item.id} className={`activity-item activity-${item.type} enter-anim`}>
-                      <div className="activity-icon-col">
-                        <div className="activity-icon">
-                          {item.type === 'verified' ? <ShieldCheck size={12} /> : 
-                           item.type === 'rejected' ? <ShieldAlert size={12} /> : 
-                           item.type === 'completed' ? <CheckCircle2 size={12} /> :
-                           item.type === 'system' ? <Navigation size={12} /> :
-                           item.type === 'generating' ? <Server size={12} /> :
-                           <Activity size={12} />}
-                        </div>
-                        {index < activities.length - 1 && <div className="timeline-connector"></div>}
-                      </div>
-                      <div className="activity-content">
-                        <div className="activity-title">{item.title}</div>
-                        <div className="activity-entity">
-                          {item.driverName} <span className="dot-sep">·</span> Vehicle {item.tripId.split('-')[1] || item.tripId}
-                        </div>
-                        <div className="activity-desc">
-                          {item.description}
-                        </div>
-                        <div className="activity-time" style={{ marginTop: '0.25rem' }}>
-                          {item.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                        </div>
-                        {item.txHash && (
-                          <div className="activity-tx">
-                            <span className="tx-hash">{item.txHash.substring(0, 16)}...</span>
-                            <button className="copy-btn-inline" onClick={(e) => {
-                              e.stopPropagation();
-                              navigator.clipboard.writeText(item.txHash!);
-                            }}>COPY</button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
+
+            <div className="sidebar-group">
+              <div className="sidebar-group-title">OPERATIONS</div>
+              <button className={`sidebar-item ${activeView === 'OPERATIONS' ? 'active' : ''}`} onClick={() => setActiveView('OPERATIONS')}>
+                <MapPin size={15} />
+                <span>Fleet Command</span>
+              </button>
             </div>
-          )}
+
+            <div className="sidebar-group">
+              <div className="sidebar-group-title">LOGISTICS</div>
+              <button className={`sidebar-item ${activeView === 'SHIPMENTS' ? 'active' : ''}`} onClick={() => setActiveView('SHIPMENTS')}>
+                <Package size={15} />
+                <span>Shipments</span>
+              </button>
+              <button className={`sidebar-item ${activeView === 'DRIVERS' ? 'active' : ''}`} onClick={() => setActiveView('DRIVERS')}>
+                <UserCheck size={15} />
+                <span>Drivers</span>
+              </button>
+            </div>
+
+            <div className="sidebar-group">
+              <div className="sidebar-group-title">COMPLIANCE</div>
+              <button className={`sidebar-item ${activeView === 'COMPLIANCE' ? 'active' : ''}`} onClick={() => setActiveView('COMPLIANCE')}>
+                <ShieldCheck size={15} />
+                <span>Verification</span>
+                {pendingVerificationsCount > 0 && <span className="nav-badge">{pendingVerificationsCount}</span>}
+              </button>
+              <button className={`sidebar-item ${activeView === 'PRIVACY_AUDIT' ? 'active' : ''}`} onClick={() => setActiveView('PRIVACY_AUDIT')}>
+                <Lock size={15} />
+                <span>Privacy Audit</span>
+              </button>
+              <button className={`sidebar-item ${activeView === 'INCIDENTS' ? 'active' : ''}`} onClick={() => setActiveView('INCIDENTS')}>
+                <AlertTriangle size={15} />
+                <span>Incidents</span>
+                {incidents.length > 0 && <span className="nav-badge" style={{ background: 'var(--crit-dim)', color: 'var(--crit)' }}>{incidents.length}</span>}
+              </button>
+            </div>
+
+            <div className="sidebar-group">
+              <div className="sidebar-group-title">FINANCE</div>
+              <button className={`sidebar-item ${activeView === 'SETTLEMENTS' ? 'active' : ''}`} onClick={() => setActiveView('SETTLEMENTS')}>
+                <CreditCard size={15} />
+                <span>Settlements</span>
+                {pendingSettlementsCount > 0 && <span className="nav-badge nav-badge-accent">{pendingSettlementsCount}</span>}
+              </button>
+            </div>
+          </div>
         </aside>
 
-        {/* Center Map Workspace */}
-        <div className="map-panel">
-          <MapContainer center={MAP_CENTER} zoom={8} scrollWheelZoom={true} zoomControl={false}>
-            <GlobalMapControls />
-            <MapController 
-              followMode={followMode} 
-              lat={activeDriverId ? driverLocations.find(d => d.id === activeDriverId)?.currentLat : undefined} 
-              lng={activeDriverId ? driverLocations.find(d => d.id === activeDriverId)?.currentLng : undefined} 
-            />
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-            />
-            {driverLocations.map(driver => (
-              <div key={`route-${driver.id}`}>
-                {driver.osrmStatus === 'ok' ? (
-                  <Polyline 
-                    positions={driver.routeCoords} 
-                    pathOptions={{ 
-                      color: activeDriverId === driver.id ? 'var(--accent)' : 'var(--text-tertiary)', 
-                      weight: activeDriverId === driver.id ? 4 : 2,
-                      opacity: activeDriverId === driver.id ? 0.9 : 0.2,
-                      lineCap: 'round',
-                      lineJoin: 'round'
-                    }} 
-                  />
-                ) : (
-                  <Polyline 
-                    positions={[[driver.start.lat, driver.start.lng], [driver.destination.lat, driver.destination.lng]]} 
-                    pathOptions={{ 
-                      color: activeDriverId === driver.id ? 'var(--accent)' : 'var(--text-tertiary)', 
-                      weight: activeDriverId === driver.id ? 3 : 2,
-                      dashArray: activeDriverId === driver.id ? undefined : '5, 8',
-                      opacity: activeDriverId === driver.id ? 0.8 : 0.3
-                    }} 
-                  />
-                )}
-                
-                {/* Render Route Stops */}
-                {driver.stops.map(stop => {
-                  if (stop.type === 'Destination') return null; // We render it separately
-                  const isHighlighted = activeDriverId === driver.id;
-                  if (!isHighlighted && stop.status !== 'active') return null; // Only show active stops or all stops for selected driver
-                  
-                  return (
-                    <Marker 
-                      key={stop.id}
-                      position={[stop.lat, stop.lng]} 
-                      icon={createStopIcon(stop.type, isHighlighted, stop.status === 'active')}
-                    >
-                      <Popup>
-                        <div className="popup-driver-name">{stop.name}</div>
-                        <div className="popup-score">{stop.type} · {stop.status}</div>
-                      </Popup>
-                    </Marker>
-                  );
-                })}
-
-                <Marker 
-                  position={[driver.destination.lat, driver.destination.lng]} 
-                  icon={createDestinationIcon()}
-                >
-                  <Popup>
-                    <div className="popup-driver-name">{driver.destinationName}</div>
-                    <div className="popup-score">Destination</div>
-                  </Popup>
-                </Marker>
-                <Marker 
-                  position={[driver.currentLat, driver.currentLng]} 
-                  icon={createTruckIcon(driver.risk, driver.heading, activeDriverId === driver.id)}
-                  eventHandlers={{
-                    click: () => setActiveDriverId(prev => prev === driver.id ? null : driver.id),
-                  }}
-                >
-                  <Popup>
-                    <div className="popup-driver-name">{driver.name}</div>
-                    <div className="popup-score">Status: En Route · {driver.risk === 'HIGH' ? 'High Risk' : 'Compliant'}</div>
-                  </Popup>
-                </Marker>
+        {/* Dynamic Workspace View Router */}
+        {activeView === 'OVERVIEW' && (
+          <div className="overview-workspace">
+            <div className="overview-header">
+              <div>
+                <h1 className="overview-title">Enterprise Logistics Command Center</h1>
+                <div className="overview-subtitle">FleetShield Privacy-First Operations · {activeRole} View</div>
               </div>
-            ))}
-          </MapContainer>
-          
-          {/* Offline Banner Overlay */}
-          {backendStatus === 'offline' && (
-            <div className="offline-banner">
-              <Server size={14} />
-              API Server Disconnected. Local simulation mode only. Midnight network unreachable.
+              <span className="chip chip-sim">SIMULATION DATA</span>
             </div>
-          )}
-        </div>
 
-        {/* Right Detail Pane */}
-        {(() => {
-          const selectedDriver = activeDriverId ? driverLocations.find(d => d.id === activeDriverId) : null;
-          const activeStop = selectedDriver?.stops.find(s => s.status === 'active');
-          const nextStop = selectedDriver?.stops.find(s => s.status === 'pending');
-
-          return (
-            <aside className={`detail-panel ${selectedDriver ? 'open' : ''}`}>
-              {/* Mobile handle */}
-              <div className="show-on-mobile-only detail-panel-handle"></div>
-
-              {!selectedDriver ? (
-                <div className="detail-empty">
-                  <Shield size={32} color="var(--text-tertiary)" style={{ marginBottom: '1rem', opacity: 0.5 }} />
-                  <div className="empty-title">No Vehicle Selected</div>
-                  <div className="empty-desc">Choose a vehicle on the map or from the fleet list to view real-time intelligence, route stops, and ZK compliance.</div>
+            {/* KPI Cards Grid */}
+            <div className="kpi-grid">
+              <div className="kpi-card">
+                <div className="kpi-header">
+                  <span>ACTIVE RIGS</span>
+                  <Truck size={15} />
                 </div>
-              ) : (
-                <>
-                  {/* Header */}
-                  <div className="detail-panel-header">
-                    <div className="detail-panel-context">
-                      <Shield size={12} color="var(--accent)" />
-                      VEHICLE INTELLIGENCE
-                    </div>
-                    <div className="detail-panel-title-row">
-                      <div>
-                        <div className="detail-panel-driver">{selectedDriver.name}</div>
-                        <div className="detail-panel-sub-row">
-                          <span className="detail-panel-vehicle-id">Vehicle {selectedDriver.id.split('-')[1] || selectedDriver.id}</span>
-                          <span className={`badge ${selectedDriver.driverStatus === 'DRIVING' ? 'badge-ok' : 'badge-warn'}`}>
-                            ● {selectedDriver.driverStatus.replace('_', ' ')}
-                          </span>
-                        </div>
+                <div className="kpi-value">12</div>
+                <div className="kpi-subtext">4 Rigs Simulating Real Roads</div>
+              </div>
+
+              <div className="kpi-card">
+                <div className="kpi-header">
+                  <span>ACTIVE SHIPMENTS</span>
+                  <Package size={15} />
+                </div>
+                <div className="kpi-value">{shipments.length}</div>
+                <div className="kpi-subtext">Delhi · Jaipur · Gwalior · Indore</div>
+              </div>
+
+              <div className="kpi-card">
+                <div className="kpi-header">
+                  <span>ON-TIME RATE</span>
+                  <Clock size={15} />
+                </div>
+                <div className="kpi-value" style={{ color: 'var(--ok)' }}>94.2%</div>
+                <div className="kpi-subtext">+1.8% vs last week</div>
+              </div>
+
+              <div className="kpi-card">
+                <div className="kpi-header">
+                  <span>COMPLIANCE RATE</span>
+                  <ShieldCheck size={15} />
+                </div>
+                <div className="kpi-value" style={{ color: 'var(--accent)' }}>96.0%</div>
+                <div className="kpi-subtext">Midnight ZK Contract Verified</div>
+              </div>
+
+              <div className="kpi-card">
+                <div className="kpi-header">
+                  <span>PENDING VERIFICATION</span>
+                  <AlertTriangle size={15} />
+                </div>
+                <div className="kpi-value" style={{ color: 'var(--warn)' }}>{pendingVerificationsCount}</div>
+                <div className="kpi-subtext">Awaiting ZK proof submission</div>
+              </div>
+
+              <div className="kpi-card">
+                <div className="kpi-header">
+                  <span>PENDING SETTLEMENT</span>
+                  <CreditCard size={15} />
+                </div>
+                <div className="kpi-value" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>
+                  ₹{pendingSettlementTotal.toLocaleString()}
+                </div>
+                <div className="kpi-subtext">{pendingSettlementsCount} Verified Payouts Ready</div>
+              </div>
+            </div>
+
+            {/* Overview Content Grid */}
+            <div className="overview-content-grid">
+              <div className="overview-panel">
+                <div className="overview-panel-title">
+                  <span>Active Shipments Queue</span>
+                  <button className="copy-btn-inline" onClick={() => setActiveView('SHIPMENTS')}>View All Shipments →</button>
+                </div>
+                <div className="data-table">
+                  <div className="table-header" style={{ gridTemplateColumns: '1.2fr 1fr 1fr 1fr' }}>
+                    <div>SHIPMENT / ROUTE</div>
+                    <div>ASSIGNED RIG</div>
+                    <div>STATUS</div>
+                    <div>COMPLIANCE</div>
+                  </div>
+                  {shipments.map(s => (
+                    <div key={s.id} className="table-row" style={{ gridTemplateColumns: '1.2fr 1fr 1fr 1fr' }}>
+                      <div className="cell-entity">
+                        <span className="entity-name" style={{ fontFamily: 'var(--font-mono)' }}>{s.id}</span>
+                        <span className="entity-sub">{s.origin} → {s.destination}</span>
                       </div>
-                      <button 
-                        className="detail-close-btn" 
-                        onClick={() => setActiveDriverId(null)}
-                        title="Close Drawer"
-                      >
-                        <X size={16} />
+                      <div className="cell-entity">
+                        <span className="entity-name">{s.driverName}</span>
+                        <span className="entity-sub">{s.vehicleId}</span>
+                      </div>
+                      <div className="cell-status">
+                        <span className="badge badge-ok">{s.status}</span>
+                      </div>
+                      <div className="cell-status">
+                        <span className={`badge ${s.complianceState === 'VERIFIED' ? 'badge-ok' : (s.complianceState === 'REJECTED' ? 'badge-crit' : 'badge-warn')}`}>
+                          {s.complianceState}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="overview-panel">
+                <div className="overview-panel-title">
+                  <span>Settlement Approval Queue</span>
+                  <button className="copy-btn-inline" onClick={() => setActiveView('SETTLEMENTS')}>Settlements →</button>
+                </div>
+                {shipments.filter(s => s.settlementStatus === 'READY_FOR_APPROVAL').length === 0 ? (
+                  <div className="table-empty">No settlements pending approval. Verify trip compliance to make payouts eligible.</div>
+                ) : (
+                  shipments.filter(s => s.settlementStatus === 'READY_FOR_APPROVAL').map(s => (
+                    <div key={s.id} className="settlement-card" style={{ padding: '0.875rem' }}>
+                      <div className="shipment-card-header">
+                        <span className="shipment-id">{s.id}</span>
+                        <span className="settlement-amount">₹{s.payoutAmount.toLocaleString()}</span>
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                        {s.driverName} · {s.origin} → {s.destination}
+                      </div>
+                      <button className="btn btn-primary" style={{ marginTop: '0.25rem' }} onClick={() => approveSettlement(s.id)}>
+                        Approve Settlement
                       </button>
                     </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeView === 'OPERATIONS' && (
+          <div style={{ display: 'flex', flexDirection: 'row', width: '100%', height: '100%', position: 'relative' }}>
+            {/* Left Data Panel */}
+            <aside className={`side-panel ${mobileMenuOpen ? 'mobile-open' : ''}`}>
+              <div className="side-panel-tabs">
+                <div className={`sp-tab ${activeTab === 'OPERATIONS' ? 'active' : ''}`} onClick={() => setActiveTab('OPERATIONS')}>Fleet</div>
+                <div className={`sp-tab ${activeTab === 'COMPLIANCE' ? 'active' : ''}`} onClick={() => setActiveTab('COMPLIANCE')}>Activity</div>
+              </div>
+              
+              {activeTab === 'OPERATIONS' && (
+                <div className="panel-section">
+                  <div className="section-header">
+                    <h2 className="section-title">Vehicles</h2>
+                    <div className="section-meta">{driverLocations.length} ACTIVE</div>
                   </div>
 
-                  {/* Scrollable Body */}
-                  <div className="detail-panel-body">
-                    {/* 2-Column Compact Summary */}
-                    <div className="compact-summary-grid">
-                      <div className="summary-item">
-                        <span className="summary-label">CURRENT STATE</span>
-                        <span className="summary-value text-accent">{selectedDriver.driverStatus.replace('_', ' ')}</span>
-                      </div>
-                      <div className="summary-item">
-                        <span className="summary-label">DESTINATION</span>
-                        <span className="summary-value">{selectedDriver.destinationName}</span>
-                      </div>
-                      <div className="summary-item">
-                        <span className="summary-label">RISK LEVEL</span>
-                        <span className={`summary-value ${selectedDriver.risk === 'HIGH' ? 'text-crit' : (selectedDriver.risk === 'MEDIUM' ? 'text-warn' : 'text-ok')}`}>
-                          {selectedDriver.risk}
-                        </span>
-                      </div>
-                      <div className="summary-item">
-                        <span className="summary-label">COMPLIANCE</span>
-                        <span className={`summary-value ${status === 'success' ? 'text-ok' : (status === 'error' ? 'text-crit' : 'text-warn')}`}>
-                          {status === 'success' ? 'VERIFIED' : (status === 'error' ? 'REJECTED' : 'REQUIRES VERIFICATION')}
-                        </span>
-                      </div>
+                  <div className="filter-tabs">
+                    {(['ALL', 'ON_ROUTE', 'COMPLIANT', 'ATTENTION', 'HIGH_RISK', 'OFFLINE'] as FleetFilter[]).map(f => (
+                      <button 
+                        key={f} 
+                        className={`filter-tab ${fleetFilter === f ? 'active' : ''}`}
+                        onClick={() => setFleetFilter(f)}
+                      >
+                        {f.replace('_', ' ')}
+                      </button>
+                    ))}
+                  </div>
+                  
+                  <div className="data-table">
+                    <div className="table-header">
+                      <div>DRIVER / ID</div>
+                      <div>STATUS</div>
+                      <div style={{ textAlign: 'right' }}>SCORE</div>
                     </div>
-
-                    {/* Current / Next Stop Focus Block */}
-                    <div className="focus-block">
-                      <div className="focus-header">
-                        <span className="focus-tag">
-                          {selectedDriver.driverStatus !== 'DRIVING' ? 'CURRENT STOP' : 'CURRENT STATUS'}
-                        </span>
-                        <span className="focus-meta">
-                          {activeStop ? `${Math.round(activeStop.remainingMs / 60000)}m remaining` : 'In Transit'}
-                        </span>
-                      </div>
-                      <div className="focus-title">
-                        {activeStop ? activeStop.name : 'On Route to Destination'}
-                      </div>
-                      <div className="next-stop-row">
-                        <span className="next-stop-label">NEXT STOP</span>
-                        <span className="next-stop-name">
-                          {nextStop ? `${nextStop.name} (${nextStop.type})` : selectedDriver.destinationName}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Trip Progress Section */}
-                    <div className="detail-section">
-                      <div className="detail-section-header">
-                        <span className="detail-section-title">TRIP PROGRESS</span>
-                        <span className="focus-meta" style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
-                          {Math.round(selectedDriver.progress * 100)}% complete
-                        </span>
-                      </div>
-                      <div className="trip-progress-box">
-                        <div className="progress-track">
-                          <div className="progress-fill" style={{ width: `${selectedDriver.progress * 100}%` }}></div>
+                    
+                    {filteredDrivers.length === 0 ? (
+                      <div className="table-empty">No vehicles match this filter</div>
+                    ) : (
+                      filteredDrivers.map(driver => (
+                        <div 
+                          key={driver.id} 
+                          className={`table-row ${activeDriverId === driver.id ? 'selected' : ''}`}
+                          onClick={() => {
+                            setActiveDriverId(driver.id);
+                            if (status !== 'idle') setStatus('idle');
+                          }}
+                        >
+                          <div className="cell-entity">
+                            <span className="entity-name">{driver.name}</span>
+                            <span className="entity-sub">Vehicle {driver.id.split('-')[1]} · {driver.driverStatus.replace('_', ' ')}</span>
+                          </div>
+                          <div className="cell-status">
+                            <span className={`badge ${driver.risk === 'HIGH' ? 'badge-crit' : (driver.risk === 'MEDIUM' ? 'badge-warn' : 'badge-ok')}`}>
+                              {driver.risk === 'LOW' ? 'COMPLIANT' : driver.risk}
+                            </span>
+                          </div>
+                          <div className="cell-metric">{driver.score}</div>
                         </div>
-                        <div className="progress-origin-dest">
-                          <span>Gwalior Central Depot</span>
-                          <span>{selectedDriver.destinationName}</span>
-                        </div>
-                        <div className="progress-stats-row">
-                          <span>{Math.round(selectedDriver.progress * 100)}% complete</span>
-                          <span style={{ fontFamily: 'var(--font-mono)' }}>
-                            {Math.round((1 - selectedDriver.progress) * 1240 + 60)} km remaining
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Route Timeline (TRIP STOPS) */}
-                    {selectedDriver.stops && selectedDriver.stops.length > 0 && (
-                      <div className="detail-section">
-                        <div className="detail-section-header">
-                          <span className="detail-section-title">TRIP STOPS</span>
-                          <span className="focus-meta">{selectedDriver.stops.length} STOPS</span>
-                        </div>
-                        <div className="compact-timeline">
-                          {selectedDriver.stops.map((stop) => {
-                            const isPast = stop.status === 'completed';
-                            const isCurrent = stop.status === 'active';
-                            return (
-                              <div key={stop.id} className={`timeline-row ${isPast ? 'completed' : ''} ${isCurrent ? 'active' : ''} ${!isPast && !isCurrent ? 'upcoming' : ''}`}>
-                                <div className="timeline-dot-wrapper">
-                                  {isPast ? <Check size={10} /> : <div className="timeline-dot" />}
-                                </div>
-                                <div className="timeline-row-info">
-                                  <div className="timeline-row-name">{stop.name}</div>
-                                  <div className="timeline-row-sub">
-                                    {isCurrent ? `${stop.type} · Active (${Math.round(stop.remainingMs / 60000)}m left)` : 
-                                     isPast ? `${stop.type} · Completed` : `${stop.type} · Upcoming`}
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
+                      ))
                     )}
+                  </div>
+                </div>
+              )}
+              
+              {activeTab === 'COMPLIANCE' && (
+                <div className="panel-section activity-section" style={{ borderBottom: 'none', height: '100%' }}>
+                  <div className="section-header">
+                    <h2 className="section-title">Compliance History</h2>
+                    <div className="section-meta">IMMUTABLE LOGS</div>
+                  </div>
+                  
+                  <div className="activity-feed">
+                    {activities.length === 0 ? (
+                      <div className="activity-empty-state">
+                        <div className="empty-title">No recent activity</div>
+                        <div className="empty-desc">Fleet compliance events will appear here as they occur.</div>
+                      </div>
+                    ) : (
+                      activities.map((item, index) => (
+                        <div key={item.id} className={`activity-item activity-${item.type} enter-anim`}>
+                          <div className="activity-icon-col">
+                            <div className="activity-icon">
+                              {item.type === 'verified' ? <ShieldCheck size={12} /> : 
+                               item.type === 'rejected' ? <ShieldAlert size={12} /> : 
+                               item.type === 'completed' ? <CheckCircle2 size={12} /> :
+                               item.type === 'system' ? <Navigation size={12} /> :
+                               item.type === 'generating' ? <Server size={12} /> :
+                               <Activity size={12} />}
+                            </div>
+                            {index < activities.length - 1 && <div className="timeline-connector"></div>}
+                          </div>
+                          <div className="activity-content">
+                            <div className="activity-title">{item.title}</div>
+                            <div className="activity-entity">
+                              {item.driverName} <span className="dot-sep">·</span> Vehicle {item.tripId.split('-')[1] || item.tripId}
+                            </div>
+                            <div className="activity-desc">
+                              {item.description}
+                            </div>
+                            <div className="activity-time" style={{ marginTop: '0.25rem' }}>
+                              {item.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                            </div>
+                            {item.txHash && (
+                              <div className="activity-tx">
+                                <span className="tx-hash">{item.txHash.substring(0, 16)}...</span>
+                                <button className="copy-btn-inline" onClick={() => navigator.clipboard.writeText(item.txHash!)}>COPY</button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </aside>
 
-                    {/* Vehicle Metadata */}
-                    <div className="detail-section">
-                      <div className="detail-section-header">
-                        <span className="detail-section-title">VEHICLE DETAILS</span>
-                      </div>
-                      <div className="metadata-grid">
-                        <div className="meta-item">
-                          <span className="meta-key">Vehicle ID</span>
-                          <span className="meta-val">{selectedDriver.id}</span>
-                        </div>
-                        <div className="meta-item">
-                          <span className="meta-key">Driver</span>
-                          <span className="meta-val">{selectedDriver.name}</span>
-                        </div>
-                        <div className="meta-item">
-                          <span className="meta-key">Compliance Score</span>
-                          <span className="meta-val" style={{ fontFamily: 'var(--font-mono)' }}>{selectedDriver.score} / 100</span>
-                        </div>
-                        <div className="meta-item">
-                          <span className="meta-key">Vehicle Class</span>
-                          <span className="meta-val">Class A Heavy Rig</span>
-                        </div>
-                        <div className="meta-item">
-                          <span className="meta-key">Current State</span>
-                          <span className="meta-val">{selectedDriver.driverStatus.replace('_', ' ')}</span>
-                        </div>
-                        <div className="meta-item">
-                          <span className="meta-key">Destination</span>
-                          <span className="meta-val">{selectedDriver.destinationName}</span>
-                        </div>
-                      </div>
+            {/* Center Map */}
+            <div className="map-panel">
+              <MapContainer center={MAP_CENTER} zoom={8} scrollWheelZoom={true} style={{ width: '100%', height: '100%' }}>
+                <TileLayer
+                  attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+                  url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                />
+
+                <GlobalMapControls />
+                <MapController 
+                  lat={selectedDriver?.currentLat} 
+                  lng={selectedDriver?.currentLng} 
+                  followMode={followMode} 
+                />
+
+                {driverLocations.map(driver => (
+                  <Marker 
+                    key={driver.id} 
+                    position={[driver.currentLat, driver.currentLng]}
+                    icon={createTruckIcon(driver.risk, driver.heading, activeDriverId === driver.id)}
+                    eventHandlers={{ click: () => setActiveDriverId(driver.id) }}
+                  >
+                    <Popup>
+                      <div className="popup-driver-name">{driver.name}</div>
+                      <div className="popup-score">Vehicle {driver.id} · Score: {driver.score}</div>
+                    </Popup>
+                  </Marker>
+                ))}
+
+                {driverLocations.map(driver => (
+                  <Marker 
+                    key={`dest-${driver.id}`} 
+                    position={[driver.destination.lat, driver.destination.lng]}
+                    icon={createDestinationIcon()}
+                  >
+                    <Popup>
+                      <div className="popup-driver-name">{driver.destinationName}</div>
+                      <div className="popup-score">Destination for {driver.name}</div>
+                    </Popup>
+                  </Marker>
+                ))}
+
+                {selectedDriver && selectedDriver.stops.map(stop => (
+                  <Marker 
+                    key={stop.id} 
+                    position={[stop.lat, stop.lng]}
+                    icon={createStopIcon(stop.type, true, stop.status === 'active')}
+                  >
+                    <Popup>
+                      <div className="popup-driver-name">{stop.name}</div>
+                      <div className="popup-score">Stop Type: {stop.type} ({stop.status})</div>
+                    </Popup>
+                  </Marker>
+                ))}
+
+                {driverLocations.map(driver => (
+                  <Polyline 
+                    key={`route-${driver.id}`}
+                    positions={driver.routeCoords}
+                    pathOptions={{
+                      color: activeDriverId === driver.id ? 'var(--accent)' : 'var(--border)',
+                      weight: activeDriverId === driver.id ? 4 : 2,
+                      opacity: activeDriverId === driver.id ? 0.9 : 0.4,
+                      dashArray: activeDriverId === driver.id ? undefined : '4, 8'
+                    }}
+                  />
+                ))}
+              </MapContainer>
+            </div>
+
+            {/* Right Vehicle Intelligence Drawer */}
+            {(() => {
+              const selectedDriver = driverLocations.find(d => d.id === activeDriverId);
+              return (
+                <aside className={`detail-panel ${selectedDriver ? 'open' : ''}`}>
+                  {!selectedDriver ? (
+                    <div className="detail-empty">
+                      <Truck size={32} color="var(--text-tertiary)" />
+                      <div className="empty-title">No vehicle selected</div>
+                      <div className="empty-desc">Click any truck marker on the map to inspect live route, stops, and compliance verification.</div>
                     </div>
+                  ) : (
+                    <>
+                      <div className="detail-panel-header">
+                        <div className="detail-panel-context">
+                          <Truck size={12} />
+                          <span>Vehicle Intelligence</span>
+                        </div>
+                        <div className="detail-panel-title-row">
+                          <div>
+                            <div className="detail-panel-driver">{selectedDriver.name}</div>
+                            <div className="detail-panel-sub-row">
+                              <span className="detail-panel-vehicle-id">RIG {selectedDriver.id}</span>
+                              <span className={`badge ${selectedDriver.risk === 'HIGH' ? 'badge-crit' : (selectedDriver.risk === 'MEDIUM' ? 'badge-warn' : 'badge-ok')}`}>
+                                {selectedDriver.risk} RISK
+                              </span>
+                            </div>
+                          </div>
+                          <button className="detail-close-btn" onClick={() => setActiveDriverId(null)}>
+                            <X size={16} />
+                          </button>
+                        </div>
+                      </div>
 
-                    {/* Midnight ZK Audit Trail */}
-                    <div className="detail-section">
-                      <div className="detail-section-header">
-                        <span className="detail-section-title">MIDNIGHT PRIVACY VERIFICATION</span>
+                      <div className="detail-panel-body">
+                        <div className="compact-summary-grid">
+                          <div className="summary-item">
+                            <span className="summary-label">DRIVER SCORE</span>
+                            <span className={`summary-value ${selectedDriver.score < 50 ? 'text-crit' : (selectedDriver.score < 75 ? 'text-warn' : 'text-ok')}`}>
+                              {selectedDriver.score} / 100
+                            </span>
+                          </div>
+                          <div className="summary-item">
+                            <span className="summary-label">CURRENT SPEED</span>
+                            <span className="summary-value">68 km/h</span>
+                          </div>
+                          <div className="summary-item">
+                            <span className="summary-label">ROUTE DISTANCE</span>
+                            <span className="summary-value">{selectedDriver.distance} km</span>
+                          </div>
+                          <div className="summary-item">
+                            <span className="summary-label">SIMULATION STATUS</span>
+                            <span className="summary-value text-accent">{selectedDriver.driverStatus}</span>
+                          </div>
+                        </div>
+
+                        <div className="focus-block">
+                          <div className="focus-header">
+                            <span className="focus-tag">ACTIVE STOP</span>
+                            <span className="focus-meta">Progress: {Math.round(selectedDriver.progress * 100)}%</span>
+                          </div>
+                          <div className="focus-title">{selectedDriver.destinationName}</div>
+                          <div className="next-stop-row">
+                            <span className="next-stop-label">Destination ETA</span>
+                            <span className="next-stop-name">11:45 AM</span>
+                          </div>
+                        </div>
+
+                        <div className="detail-section">
+                          <div className="detail-section-title">
+                            <ShieldCheck size={14} />
+                            MIDNIGHT ZK COMPLIANCE PROVER
+                          </div>
+                          
+                          <div className="zk-audit-trail">
+                            <div className={`zk-audit-step ${status !== 'idle' ? 'success' : ''}`}>
+                              <div className="zk-step-left">
+                                <HardDrive size={14} />
+                                <span>1. PRIVATE TELEMETRY</span>
+                              </div>
+                              <span className="zk-step-status-chip">{status !== 'idle' ? 'COMPLETE' : 'PENDING'}</span>
+                            </div>
+
+                            <div className={`zk-audit-step ${(status === 'generating' || status === 'verifying' || status === 'success' || status === 'error') ? 'active' : ''} ${status === 'verifying' || status === 'success' || status === 'error' ? 'success' : ''}`}>
+                              <div className="zk-step-left">
+                                {status === 'generating' ? <div className="spinner-small" /> : <Lock size={14} />}
+                                <span>2. ZK PROOF GENERATION</span>
+                              </div>
+                              <span className="zk-step-status-chip">{status === 'generating' ? 'COMPUTING...' : ((status === 'verifying' || status === 'success' || status === 'error') ? 'COMPLETE' : 'PENDING')}</span>
+                            </div>
+
+                            <div className={`zk-audit-step ${(status === 'verifying' || status === 'success' || status === 'error') ? 'active' : ''} ${status === 'success' || status === 'error' ? 'success' : ''}`}>
+                              <div className="zk-step-left">
+                                {status === 'verifying' ? <div className="spinner-small" /> : <Server size={14} />}
+                                <span>3. MIDNIGHT VERIFICATION</span>
+                              </div>
+                              <span className="zk-step-status-chip">{status === 'verifying' ? 'EVALUATING...' : ((status === 'success' || status === 'error') ? 'COMPLETE' : 'PENDING')}</span>
+                            </div>
+
+                            <div className={`zk-audit-step ${status === 'success' ? 'success' : ''} ${status === 'error' ? 'rejected' : ''}`}>
+                              <div className="zk-step-left">
+                                {status === 'success' ? <CheckCircle2 size={14} color="var(--status-ok)" /> : (status === 'error' ? <XCircle size={14} color="var(--status-crit)" /> : <Shield size={14} />)}
+                                <span>4. COMPLIANCE RESULT</span>
+                              </div>
+                              <span className="zk-step-status-chip">{status === 'success' ? 'VERIFIED' : (status === 'error' ? 'REJECTED' : 'PENDING')}</span>
+                            </div>
+                          </div>
+
+                          {status === 'success' && txHash && (
+                            <div className="terminal" style={{ marginTop: '0.75rem' }}>
+                              <div className="terminal-header">
+                                <span style={{ color: 'var(--status-ok)', fontWeight: 600 }}>✓ COMPLIANCE VERIFIED</span>
+                                <span className="terminal-success">[ON-CHAIN]</span>
+                              </div>
+                              <div className="activity-tx" style={{ width: '100%', justifyContent: 'space-between' }}>
+                                <span className="tx-hash">{txHash.substring(0, 22)}...</span>
+                                <button className="copy-btn-inline" onClick={() => navigator.clipboard.writeText(txHash)}>COPY</button>
+                              </div>
+                            </div>
+                          )}
+
+                          {status === 'error' && errorMsg && (
+                            <div className="terminal" style={{ marginTop: '0.75rem', borderColor: 'rgba(239, 68, 68, 0.3)' }}>
+                              <div className="terminal-header">
+                                <span style={{ color: 'var(--status-crit)', fontWeight: 600 }}>✕ COMPLIANCE REJECTED</span>
+                                <span className="terminal-error">[FAILED]</span>
+                              </div>
+                              <div className="terminal-body terminal-error" style={{ fontSize: '0.6875rem' }}>
+                                {errorMsg}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="detail-panel-footer">
                         <button 
-                          className="copy-btn-inline" 
+                          className="btn btn-primary btn-large"
                           onClick={() => runVerification(selectedDriver, false)}
                           disabled={status === 'generating' || status === 'verifying'}
                         >
-                          FAIL DEMO
+                          {(status === 'generating' || status === 'verifying') ? <div className="spinner" /> : <Shield size={16} />}
+                          Verify Compliance
                         </button>
-                      </div>
-                      <div className="focus-meta" style={{ marginBottom: '0.5rem' }}>
-                        Verify compliance without exposing underlying telemetry.
-                      </div>
-                      
-                      <div className="zk-audit-trail">
-                        {/* Step 1 */}
-                        <div className={`zk-audit-step ${status !== 'idle' ? 'success' : ''}`}>
-                          <div className="zk-step-left">
-                            <HardDrive size={14} />
-                            <span>1. PRIVATE TELEMETRY</span>
-                          </div>
-                          <span className="zk-step-status-chip">
-                            {status !== 'idle' ? 'COMPLETE' : 'PENDING'}
-                          </span>
-                        </div>
-
-                        {/* Step 2 */}
-                        <div className={`zk-audit-step ${(status === 'generating' || status === 'verifying' || status === 'success' || status === 'error') ? 'active' : ''} ${status === 'verifying' || status === 'success' || status === 'error' ? 'success' : ''}`}>
-                          <div className="zk-step-left">
-                            {status === 'generating' ? <div className="spinner-small" /> : <Lock size={14} />}
-                            <span>2. ZK PROOF GENERATION</span>
-                          </div>
-                          <span className="zk-step-status-chip">
-                            {status === 'generating' ? 'COMPUTING...' : ((status === 'verifying' || status === 'success' || status === 'error') ? 'COMPLETE' : 'PENDING')}
-                          </span>
-                        </div>
-
-                        {/* Step 3 */}
-                        <div className={`zk-audit-step ${(status === 'verifying' || status === 'success' || status === 'error') ? 'active' : ''} ${status === 'success' || status === 'error' ? 'success' : ''}`}>
-                          <div className="zk-step-left">
-                            {status === 'verifying' ? <div className="spinner-small" /> : <Server size={14} />}
-                            <span>3. MIDNIGHT VERIFICATION</span>
-                          </div>
-                          <span className="zk-step-status-chip">
-                            {status === 'verifying' ? 'EVALUATING...' : ((status === 'success' || status === 'error') ? 'COMPLETE' : 'PENDING')}
-                          </span>
-                        </div>
-
-                        {/* Step 4 */}
-                        <div className={`zk-audit-step ${status === 'success' ? 'success' : ''} ${status === 'error' ? 'rejected' : ''}`}>
-                          <div className="zk-step-left">
-                            {status === 'success' ? <CheckCircle2 size={14} color="var(--status-ok)" /> : (status === 'error' ? <XCircle size={14} color="var(--status-crit)" /> : <Shield size={14} />)}
-                            <span>4. COMPLIANCE RESULT</span>
-                          </div>
-                          <span className="zk-step-status-chip">
-                            {status === 'success' ? 'VERIFIED' : (status === 'error' ? 'REJECTED' : 'PENDING')}
-                          </span>
+                        <div className="footer-actions-row" style={{ marginTop: '0.5rem' }}>
+                          <label className="follow-toggle">
+                            <input type="checkbox" checked={followMode} onChange={(e) => setFollowMode(e.target.checked)} />
+                            <span className="toggle-label">Follow Vehicle on Map</span>
+                          </label>
                         </div>
                       </div>
+                    </>
+                  )}
+                </aside>
+              );
+            })()}
+          </div>
+        )}
 
-                      {/* Success / Error Terminal Result */}
-                      {status === 'success' && txHash && (
-                        <div className="terminal" style={{ marginTop: '0.75rem' }}>
-                          <div className="terminal-header">
-                            <span style={{ color: 'var(--status-ok)', fontWeight: 600 }}>✓ COMPLIANCE VERIFIED</span>
-                            <span className="terminal-success">[ON-CHAIN]</span>
-                          </div>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-                            Midnight verification completed. Assertion proved in zero-knowledge.
-                          </div>
-                          <div className="activity-tx" style={{ width: '100%', justifyContent: 'space-between' }}>
-                            <span className="tx-hash">{txHash.substring(0, 22)}...</span>
-                            <button 
-                              className="copy-btn-inline"
-                              onClick={() => {
-                                navigator.clipboard.writeText(txHash);
-                                setCopiedTx(true);
-                                setTimeout(() => setCopiedTx(false), 2000);
-                              }}
-                            >
-                              {copiedTx ? 'COPIED!' : 'COPY'}
-                            </button>
-                          </div>
-                        </div>
-                      )}
+        {activeView === 'SHIPMENTS' && (
+          <div className="workspace-container">
+            <div className="workspace-header-bar">
+              <div className="workspace-title-group">
+                <h1 className="workspace-title">Shipment Operations Workspace</h1>
+                <div className="workspace-desc">Active freight orders, route progress, and ZK compliance status</div>
+              </div>
+              <span className="chip chip-sim">SIMULATION WORKFLOW</span>
+            </div>
 
-                      {status === 'error' && errorMsg && (
-                        <div className="terminal" style={{ marginTop: '0.75rem', borderColor: 'rgba(239, 68, 68, 0.3)' }}>
-                          <div className="terminal-header">
-                            <span style={{ color: 'var(--status-crit)', fontWeight: 600 }}>✕ COMPLIANCE REJECTED</span>
-                            <span className="terminal-error">[FAILED]</span>
-                          </div>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-                            Safety conditions not met. ZK constraint failed.
-                          </div>
-                          <div className="terminal-body terminal-error" style={{ fontSize: '0.6875rem' }}>
-                            {errorMsg}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* How It Works Disclosure */}
-                    <details className="how-it-works-details">
-                      <summary className="how-it-works-summary">
-                        <span>How FleetShield protects private telemetry</span>
-                        <ChevronDown size={14} />
-                      </summary>
-                      <div className="how-it-works-body">
-                        Vehicle telemetry (coordinates, continuous timestamps, speed) is evaluated locally to produce a Zero-Knowledge Proof. Only the cryptographic proof and non-sensitive compliance assertion are submitted to the Midnight network. Raw telemetry is never exposed or logged on-chain.
-                      </div>
-                    </details>
+            <div className="enterprise-card-grid">
+              {shipments.map(s => (
+                <div key={s.id} className="shipment-card">
+                  <div className="shipment-card-header">
+                    <span className="shipment-id">{s.id}</span>
+                    <span className={`badge ${s.priority === 'CRITICAL' ? 'badge-crit' : (s.priority === 'EXPRESS' ? 'badge-warn' : 'badge-ok')}`}>
+                      {s.priority}
+                    </span>
                   </div>
 
-                  {/* Sticky Footer */}
-                  <div className="detail-panel-footer">
-                    <button 
-                      className="btn btn-primary btn-large"
-                      onClick={() => runVerification(selectedDriver, true)}
-                      disabled={status === 'generating' || status === 'verifying'}
-                    >
-                      {(status === 'generating' || status === 'verifying') ? <div className="spinner" /> : <Shield size={16} />}
-                      Verify Compliance
+                  <div className="shipment-route">
+                    <span>{s.origin}</span>
+                    <ChevronRight size={16} color="var(--text-tertiary)" />
+                    <span>{s.destination}</span>
+                  </div>
+
+                  <div className="shipment-meta-row">
+                    <span>Rig {s.vehicleId} · {s.driverName}</span>
+                    <span style={{ fontFamily: 'var(--font-mono)' }}>ETA {s.eta}</span>
+                  </div>
+
+                  <div className="trip-progress-box">
+                    <div className="progress-track">
+                      <div className="progress-fill" style={{ width: `${Math.round(s.progress * 100)}%` }} />
+                    </div>
+                    <div className="progress-stats-row">
+                      <span>Progress: {Math.round(s.progress * 100)}%</span>
+                      <span className="text-accent">{s.status}</span>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--stroke-dim)', paddingTop: '0.75rem' }}>
+                    <span className={`badge ${s.complianceState === 'VERIFIED' ? 'badge-ok' : (s.complianceState === 'REJECTED' ? 'badge-crit' : 'badge-warn')}`}>
+                      ZK: {s.complianceState}
+                    </span>
+                    <button className="btn btn-secondary" onClick={() => {
+                      const drv = driverLocations.find(d => d.id === s.vehicleId);
+                      if (drv) runVerification(drv, false);
+                    }}>
+                      Verify ZK
                     </button>
-                    <div className="footer-actions-row">
-                      <label className="follow-toggle">
-                        <input type="checkbox" checked={followMode} onChange={(e) => setFollowMode(e.target.checked)} />
-                        <span className="toggle-label">Follow Vehicle on Map</span>
-                      </label>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {activeView === 'COMPLIANCE' && (
+          <div className="workspace-container">
+            <div className="workspace-header-bar">
+              <div className="workspace-title-group">
+                <h1 className="workspace-title">Compliance & ZK Verification Center</h1>
+                <div className="workspace-desc">Zero-knowledge proof evaluator powered by Midnight smart contracts</div>
+              </div>
+              <span className="chip chip-live">LIVE MIDNIGHT ZK</span>
+            </div>
+
+            <div className="detail-section" style={{ background: 'var(--ink-2)', padding: '1.25rem', borderRadius: '8px' }}>
+              <div className="detail-section-title">VERIFICATION AUDIT QUEUE</div>
+              <div className="data-table">
+                <div className="table-header" style={{ gridTemplateColumns: '1.5fr 1fr 1fr 1fr 1.2fr' }}>
+                  <div>SHIPMENT / DRIVER</div>
+                  <div>VEHICLE RIG</div>
+                  <div>RESULT</div>
+                  <div>TX HASH</div>
+                  <div style={{ textAlign: 'right' }}>ACTION</div>
+                </div>
+
+                {shipments.map(s => (
+                  <div key={s.id} className="table-row" style={{ gridTemplateColumns: '1.5fr 1fr 1fr 1fr 1.2fr' }}>
+                    <div className="cell-entity">
+                      <span className="entity-name">{s.driverName}</span>
+                      <span className="entity-sub">{s.id} · {s.origin} → {s.destination}</span>
+                    </div>
+                    <div className="cell-entity">
+                      <span className="entity-name">{s.vehicleId}</span>
+                    </div>
+                    <div className="cell-status">
+                      <span className={`badge ${s.complianceState === 'VERIFIED' ? 'badge-ok' : (s.complianceState === 'REJECTED' ? 'badge-crit' : 'badge-warn')}`}>
+                        {s.complianceState}
+                      </span>
+                    </div>
+                    <div className="cell-metric" style={{ textAlign: 'left' }}>
+                      {s.txHash ? `${s.txHash.substring(0, 14)}...` : 'Pending Proof'}
+                    </div>
+                    <div className="cell-metric" style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                      <button className="btn btn-secondary" onClick={() => {
+                        const drv = driverLocations.find(d => d.id === s.vehicleId);
+                        if (drv) runVerification(drv, false);
+                      }}>
+                        Verify Compliance
+                      </button>
                     </div>
                   </div>
-                </>
-              )}
-            </aside>
-          );
-        })()}
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
+        {activeView === 'SETTLEMENTS' && (
+          <div className="workspace-container">
+            <div className="workspace-header-bar">
+              <div className="workspace-title-group">
+                <h1 className="workspace-title">Financial Settlement & Payouts</h1>
+                <div className="workspace-desc">Automated carrier settlement released upon Midnight zero-knowledge verification</div>
+              </div>
+              <span className="chip chip-sim">SIMULATED SETTLEMENT</span>
+            </div>
 
-        {/* Privacy Audit Workspace View */}
-        {activeTab === 'PRIVACY_AUDIT' && (
-          <div className="map-panel" style={{ padding: '1.5rem', overflowY: 'auto', gap: '1.5rem', zIndex: 10 }}>
-            {/* Judge Explanation Banner */}
-            <div className="privacy-banner-statement" style={{ backgroundColor: 'var(--bg-surface)', borderLeft: '4px solid var(--accent)', padding: '1.25rem' }}>
-              <div style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '0.375rem' }}>
+            <div className="privacy-banner-statement" style={{ backgroundColor: 'var(--ink-2)', borderLeft: '4px solid var(--accent)' }}>
+              <strong>💡 Settlement Rule:</strong> Delivered Shipment + Verified Midnight Compliance ZK Proof → Settlement Eligible → Company Approval.
+            </div>
+
+            <div className="enterprise-card-grid">
+              {shipments.map(s => (
+                <div key={s.id} className="settlement-card">
+                  <div className="shipment-card-header">
+                    <span className="shipment-id">{s.id}</span>
+                    <span className="settlement-amount">₹{s.payoutAmount.toLocaleString()}</span>
+                  </div>
+
+                  <div style={{ fontSize: '0.8125rem', color: 'var(--text-primary)', fontWeight: 500 }}>
+                    {s.driverName} ({s.vehicleId})
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                    Route: {s.origin} → {s.destination}
+                  </div>
+
+                  <div className="shipment-meta-row" style={{ borderTop: '1px solid var(--stroke-dim)', paddingTop: '0.625rem' }}>
+                    <span>Midnight ZK:</span>
+                    <span className={`badge ${s.complianceState === 'VERIFIED' ? 'badge-ok' : 'badge-warn'}`}>{s.complianceState}</span>
+                  </div>
+
+                  <div className="shipment-meta-row">
+                    <span>Settlement Status:</span>
+                    <span className={`settlement-status-badge ${s.settlementStatus === 'APPROVED' ? 'settlement-approved' : (s.settlementStatus === 'READY_FOR_APPROVAL' ? 'settlement-eligible' : 'settlement-pending')}`}>
+                      {s.settlementStatus.replace(/_/g, ' ')}
+                    </span>
+                  </div>
+
+                  {s.settlementStatus === 'READY_FOR_APPROVAL' && (
+                    <button className="btn btn-primary" style={{ marginTop: '0.375rem' }} onClick={() => approveSettlement(s.id)}>
+                      Approve Settlement
+                    </button>
+                  )}
+
+                  {s.settlementStatus === 'APPROVED' && (
+                    <div style={{ fontSize: '0.75rem', color: 'var(--ok)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <CheckCircle2 size={14} /> Settlement Approved & Paid
+                    </div>
+                  )}
+
+                  {s.settlementStatus === 'NOT_ELIGIBLE' && (
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
+                      Run ZK verification to unlock settlement eligibility.
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {activeView === 'DRIVERS' && (
+          <div className="workspace-container">
+            <div className="workspace-header-bar">
+              <div className="workspace-title-group">
+                <h1 className="workspace-title">Drivers & Personnel Roster</h1>
+                <div className="workspace-desc">Driver safety scores, assigned rigs, and active trip status</div>
+              </div>
+              <span className="chip chip-sim">FLEET ROSTER</span>
+            </div>
+
+            <div className="enterprise-card-grid">
+              {driverLocations.map(d => (
+                <div key={d.id} className="shipment-card">
+                  <div className="shipment-card-header">
+                    <span className="shipment-id">{d.name}</span>
+                    <span className={`badge ${d.risk === 'HIGH' ? 'badge-crit' : (d.risk === 'MEDIUM' ? 'badge-warn' : 'badge-ok')}`}>
+                      {d.risk} RISK
+                    </span>
+                  </div>
+
+                  <div className="shipment-meta-row">
+                    <span>Rig Identifier:</span>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--text-1)' }}>{d.id}</span>
+                  </div>
+
+                  <div className="shipment-meta-row">
+                    <span>Driver Safety Score:</span>
+                    <span style={{ fontWeight: 700, color: d.score < 50 ? 'var(--crit)' : 'var(--ok)' }}>{d.score} / 100</span>
+                  </div>
+
+                  <div className="shipment-meta-row">
+                    <span>Active Status:</span>
+                    <span className="text-accent" style={{ fontWeight: 600 }}>{d.driverStatus}</span>
+                  </div>
+
+                  <button className="btn btn-secondary" style={{ marginTop: '0.5rem' }} onClick={() => {
+                    setActiveDriverId(d.id);
+                    setActiveView('OPERATIONS');
+                  }}>
+                    Focus Rigs on Map
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {activeView === 'PRIVACY_AUDIT' && (
+          <div className="workspace-container">
+            <div className="privacy-banner-statement" style={{ backgroundColor: 'var(--ink-2)', borderLeft: '4px solid var(--accent)', padding: '1.25rem' }}>
+              <div style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-1)', marginBottom: '0.375rem' }}>
                 What FleetShield Proves
               </div>
-              <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+              <div style={{ fontSize: '0.8125rem', color: 'var(--text-2)', lineHeight: 1.5 }}>
                 FleetShield verifies a compliance claim using Midnight's zero-knowledge infrastructure without exposing the underlying private witness data as the verification result.
               </div>
             </div>
 
-            {/* Architecture Data Protection Card */}
-            <div className="compact-summary-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', padding: '1.25rem' }}>
-              <div className="summary-item">
-                <span className="summary-label">UNDERLYING TELEMETRY</span>
-                <span className="summary-value text-accent" style={{ fontSize: '0.875rem' }}>Not Included in Ledger Result</span>
-              </div>
-              <div className="summary-item">
-                <span className="summary-label">PROVING ENGINE</span>
-                <span className="summary-value" style={{ fontSize: '0.875rem' }}>Midnight Compact ZK</span>
-              </div>
-              <div className="summary-item">
-                <span className="summary-label">AUDIT EVENT COUNT</span>
-                <span className="summary-value text-ok" style={{ fontSize: '0.875rem' }}>{receiptsHistory.length} Receipts Logged</span>
-              </div>
-            </div>
-
-            {/* Privacy Boundary Visualization */}
-            <div className="detail-section">
-              <div className="detail-section-title">INTERACTIVE PRIVACY BOUNDARY VISUALIZATION</div>
-              <PrivacyBoundaryDiagram />
-            </div>
-
-            {/* Scalability Architecture */}
+            <PrivacyBoundaryDiagram />
             <ScalabilityArchitectureDiagram />
 
-            {/* Verification History Log Table */}
             <div className="detail-section">
               <div className="detail-section-title">VERIFICATION AUDIT LOG (IMMUTABLE RECORD)</div>
               {receiptsHistory.length === 0 ? (
-                <div className="table-empty" style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '6px', padding: '2rem' }}>
+                <div className="table-empty" style={{ backgroundColor: 'var(--ink-2)', border: '1px solid var(--stroke-dim)', borderRadius: '6px', padding: '2rem' }}>
                   No ZK verifications performed yet. Run a verification from the Operations map drawer or Demo Scenarios above.
                 </div>
               ) : (
-                <div className="data-table" style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '6px' }}>
+                <div className="data-table" style={{ backgroundColor: 'var(--ink-2)', border: '1px solid var(--stroke-dim)', borderRadius: '6px' }}>
                   <div className="table-header" style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 1fr 1.5fr' }}>
                     <div>VERIFICATION ID / TRIP</div>
                     <div>DRIVER</div>
@@ -1910,9 +2092,60 @@ ${receipt.rejectionReason ? `Rejection Reason: ${receipt.rejectionReason}` : ''}
           </div>
         )}
 
+        {activeView === 'INCIDENTS' && (
+          <div className="workspace-container">
+            <div className="workspace-header-bar">
+              <div className="workspace-title-group">
+                <h1 className="workspace-title">Incident Response Center</h1>
+                <div className="workspace-desc">Compliance rejections, contract assertion tracebacks, and operational alerts</div>
+              </div>
+              <span className="chip chip-sim">INCIDENT QUEUE</span>
+            </div>
+
+            <div className="enterprise-card-grid">
+              {incidents.map(inc => (
+                <div key={inc.id} className="shipment-card" style={{ borderColor: inc.severity === 'Critical' ? 'var(--crit-line)' : 'var(--warn-line)' }}>
+                  <div className="shipment-card-header">
+                    <span className="shipment-id" style={{ color: inc.severity === 'Critical' ? 'var(--crit)' : 'var(--warn)' }}>{inc.id}</span>
+                    <span className={`badge ${inc.severity === 'Critical' ? 'badge-crit' : 'badge-warn'}`}>
+                      {inc.severity}
+                    </span>
+                  </div>
+
+                  <div style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-1)' }}>
+                    {inc.title}
+                  </div>
+
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-2)' }}>
+                    {inc.driverName} ({inc.vehicleId}) · Shipment {inc.shipmentId}
+                  </div>
+
+                  <div className="terminal" style={{ fontSize: '0.6875rem', marginTop: '0.25rem' }}>
+                    {inc.description}
+                  </div>
+
+                  <button className="btn btn-secondary" style={{ marginTop: '0.375rem' }} onClick={() => {
+                    setActiveIncident({
+                      id: inc.id,
+                      driverName: inc.driverName,
+                      tripId: inc.vehicleId,
+                      description: inc.description,
+                      timestamp: inc.timestamp,
+                      errorTrace: 'Error: failed assert: Safety conditions not met, cannot verify trip'
+                    });
+                    setInvestigationModalOpen(true);
+                  }}>
+                    Investigate Traceback
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
       </main>
 
-      {/* Command Palette Overlay */}
+      {/* Command Palette */}
       {cmdPaletteOpen && (
         <div className="cmd-overlay" onClick={() => setCmdPaletteOpen(false)}>
           <div className="cmd-palette" onClick={e => e.stopPropagation()}>
@@ -1921,7 +2154,7 @@ ${receipt.rejectionReason ? `Rejection Reason: ${receipt.rejectionReason}` : ''}
               <input 
                 type="text" 
                 className="cmd-input" 
-                placeholder="Search drivers, trips, or run commands..." 
+                placeholder="Search drivers, shipments, verifications, or incidents..." 
                 value={cmdQuery}
                 onChange={e => setCmdQuery(e.target.value)}
                 autoFocus
@@ -1930,14 +2163,14 @@ ${receipt.rejectionReason ? `Rejection Reason: ${receipt.rejectionReason}` : ''}
             </div>
             <div className="cmd-body">
               <div className="cmd-section-title">SUGGESTIONS</div>
-              <div className="cmd-item" onClick={() => { setFleetFilter('HIGH_RISK'); setCmdPaletteOpen(false); setActiveTab('OPERATIONS'); }}>
-                <ShieldAlert size={14} color="var(--status-crit)" /> Show high-risk vehicles
+              <div className="cmd-item" onClick={() => { setActiveView('OPERATIONS'); setCmdPaletteOpen(false); }}>
+                <MapPin size={14} color="var(--accent)" /> Fleet Command Map
               </div>
-              <div className="cmd-item" onClick={() => { setFleetFilter('ON_ROUTE'); setCmdPaletteOpen(false); setActiveTab('OPERATIONS'); }}>
-                <Navigation size={14} color="var(--accent)" /> Show active fleet
+              <div className="cmd-item" onClick={() => { setActiveView('SHIPMENTS'); setCmdPaletteOpen(false); }}>
+                <Package size={14} color="var(--accent)" /> View All Shipments
               </div>
-              <div className="cmd-item" onClick={() => { setActiveTab('COMPLIANCE'); setCmdPaletteOpen(false); }}>
-                <Server size={14} color="var(--text-secondary)" /> View compliance logs
+              <div className="cmd-item" onClick={() => { setActiveView('SETTLEMENTS'); setCmdPaletteOpen(false); }}>
+                <CreditCard size={14} color="var(--accent)" /> Financial Settlements
               </div>
 
               {cmdQuery.trim().length > 0 && (
@@ -1946,13 +2179,24 @@ ${receipt.rejectionReason ? `Rejection Reason: ${receipt.rejectionReason}` : ''}
                   {MOCK_DRIVERS.filter(d => d.name.toLowerCase().includes(cmdQuery.toLowerCase()) || d.id.toLowerCase().includes(cmdQuery.toLowerCase())).map(driver => (
                     <div className="cmd-item" key={driver.id} onClick={() => {
                       setActiveDriverId(driver.id);
-                      setActiveTab('OPERATIONS');
+                      setActiveView('OPERATIONS');
                       setCmdPaletteOpen(false);
-                      setFleetFilter('ALL');
                     }}>
                       <div className="cmd-driver-info">
-                        <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{driver.name}</span>
-                        <span style={{ color: 'var(--text-secondary)', fontSize: '0.6875rem' }}>{driver.id}</span>
+                        <span style={{ color: 'var(--text-1)', fontWeight: 500 }}>{driver.name}</span>
+                        <span style={{ color: 'var(--text-2)', fontSize: '0.6875rem' }}>Vehicle Rig {driver.id}</span>
+                      </div>
+                      <ChevronRight size={14} color="var(--text-tertiary)" />
+                    </div>
+                  ))}
+                  {shipments.filter(s => s.id.toLowerCase().includes(cmdQuery.toLowerCase()) || s.origin.toLowerCase().includes(cmdQuery.toLowerCase()) || s.destination.toLowerCase().includes(cmdQuery.toLowerCase())).map(s => (
+                    <div className="cmd-item" key={s.id} onClick={() => {
+                      setActiveView('SHIPMENTS');
+                      setCmdPaletteOpen(false);
+                    }}>
+                      <div className="cmd-driver-info">
+                        <span style={{ color: 'var(--text-1)', fontWeight: 500 }}>Shipment {s.id}</span>
+                        <span style={{ color: 'var(--text-2)', fontSize: '0.6875rem' }}>{s.origin} → {s.destination}</span>
                       </div>
                       <ChevronRight size={14} color="var(--text-tertiary)" />
                     </div>
