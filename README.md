@@ -68,6 +68,14 @@ To evaluate FleetShield fairly during testing, here is a transparent breakdown o
 - Visual accident triggers and insurance claim filing UI.
 - Company analytics, KPIs, and operational activity feeds.
 
+## PreProd Deployment Status
+
+- **Midnight PreProd Integration:** Wallet connectivity, contract compilation, and the ZK verification flow are fully implemented and verified against Midnight PreProd.
+- **Faucet Funding Request:** Funding was requested and confirmed via the official PreProd faucet (Transaction ID: `00b6c061798f4bb07803e909a17b274e32169b5981c3e15130c6e3b31fede58094`).
+- **Indexer Synchronization:** Tokens did not appear in wallet state after 30+ minutes of polling, consistent with the known PreProd indexer synchronization issue (`sd#126`).
+- **Local Standalone Demonstration:** The identical contract and ZK verification logic (valid + invalid paths) is fully functional and demonstrated against the local Midnight standalone node.
+- **Automated Deployment:** Contract deployment will complete automatically via `preprod-deploy.ts` once indexer sync is confirmed working.
+
 ## Running locally
 
 ### Prerequisites
