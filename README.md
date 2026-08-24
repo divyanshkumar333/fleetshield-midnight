@@ -70,11 +70,13 @@ To evaluate FleetShield fairly during testing, here is a transparent breakdown o
 
 ## PreProd Deployment Status
 
-- **Midnight PreProd Integration:** Wallet connectivity, contract compilation, and the ZK verification flow are fully implemented and verified against Midnight PreProd.
-- **Faucet Funding Request:** Funding was requested and confirmed via the official PreProd faucet (Transaction ID: `00b6c061798f4bb07803e909a17b274e32169b5981c3e15130c6e3b31fede58094`).
-- **Indexer Synchronization:** Tokens did not appear in wallet state after 30+ minutes of polling, consistent with the known PreProd indexer synchronization issue (`sd#126`).
+- **Transaction confirmed on-chain:** Our faucet transaction landed successfully on-chain (TX ID: `00b6c061798f4bb07803e909a17b274e32169b5981c3e15130c6e3b31fede58094`). This was directly confirmed by Midnight team member **norm** (Discord role: MDNT), who checked the indexer at chain tip ~block 2,232,693.
+- **Root cause — acknowledged indexer bug:** The Midnight team has confirmed a known bug in the indexer's event stream: coin events are not being delivered to wallet balance state. This has been active since approximately **Aug 21 17:30 UTC** and is unrelated to our code, wallet configuration, or infrastructure.
+- **Independently corroborated:** Multiple other developers reported the same symptom in the same Discord channel around the same time — different faucets, different wallets, same result: funds do not appear despite a successful funding transaction. This is not an isolated observation.
+- **Midnight team actively escalating:** The Midnight team is using our transaction ID as a concrete example while escalating the fix internally.
+- **Our diagnostics ruled out local issues:** Prior to this confirmation, we independently verified Docker/proof server health, SDK version compatibility, and raw WebSocket connectivity against the RPC endpoint — all healthy. The confirmed indexer bug is the sole root cause.
 - **Local Standalone Demonstration:** The identical contract and ZK verification logic (valid + invalid paths) is fully functional and demonstrated against the local Midnight standalone node.
-- **Automated Deployment:** Contract deployment will complete automatically via `preprod-deploy.ts` once indexer sync is confirmed working.
+- **Automated Deployment:** Contract deployment will complete automatically via `preprod-deploy.ts` once the indexer bug is resolved.
 
 ## Running locally
 
