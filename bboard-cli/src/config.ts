@@ -54,7 +54,13 @@ export class PreviewRemoteConfig implements Config {
     return new PreviewTestEnvironment(logger);
   }
   privateStateStoreName = 'bboard-private-state';
-  logDir = path.resolve(currentDir, '..', 'logs', 'preview-remote', `${new Date().toISOString().replace(/:/g, '-')}.log`);
+  logDir = path.resolve(
+    currentDir,
+    '..',
+    'logs',
+    'preview-remote',
+    `${new Date().toISOString().replace(/:/g, '-')}.log`,
+  );
   zkConfigPath = path.resolve(currentDir, '..', '..', 'contract', 'src', 'managed', 'bboard');
   generateDust = true;
 }
@@ -65,7 +71,13 @@ export class PreprodRemoteConfig implements Config {
     return new PreprodTestEnvironment(logger);
   }
   privateStateStoreName = 'bboard-private-state';
-  logDir = path.resolve(currentDir, '..', 'logs', 'preprod-remote', `${new Date().toISOString().replace(/:/g, '-')}.log`);
+  logDir = path.resolve(
+    currentDir,
+    '..',
+    'logs',
+    'preprod-remote',
+    `${new Date().toISOString().replace(/:/g, '-')}.log`,
+  );
   zkConfigPath = path.resolve(currentDir, '..', '..', 'contract', 'src', 'managed', 'bboard');
   generateDust = true;
 }
@@ -85,10 +97,12 @@ export class PreviewTestEnvironment extends RemoteTestEnvironment {
       try {
         await new FaucetClient(config.faucet, this.logger).health();
       } catch (error) {
-        this.logger.warn(`Faucet health-check failed, but continuing. You may need to fund manually via the faucet website. Error: ${error}`);
+        this.logger.warn(
+          `Faucet health-check failed, but continuing. You may need to fund manually via the faucet website. Error: ${error}`,
+        );
       }
     }
-  }
+  };
 
   private getProofServerUrl(): string {
     const container = this.proofServerContainer as { getUrl(): string } | undefined;
@@ -127,10 +141,12 @@ export class PreprodTestEnvironment extends RemoteTestEnvironment {
       try {
         await new FaucetClient(config.faucet, this.logger).health();
       } catch (error) {
-        this.logger.warn(`Faucet health-check failed, but continuing. You may need to fund manually via the faucet website. Error: ${error}`);
+        this.logger.warn(
+          `Faucet health-check failed, but continuing. You may need to fund manually via the faucet website. Error: ${error}`,
+        );
       }
     }
-  }
+  };
 
   private getProofServerUrl(): string {
     const container = this.proofServerContainer as { getUrl(): string } | undefined;

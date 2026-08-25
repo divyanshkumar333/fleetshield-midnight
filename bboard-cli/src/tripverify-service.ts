@@ -1,4 +1,5 @@
 import { createLogger } from './logger-utils.js';
+import { Logger } from 'pino';
 import { StandaloneConfig, PreprodRemoteConfig, PreviewRemoteConfig, type Config } from './config.js';
 import { MidnightWalletProvider } from './midnight-wallet-provider.js';
 import { waitForUnshieldedFunds } from './wallet-utils.js';
@@ -8,7 +9,7 @@ import { levelPrivateStateProvider } from '@midnight-ntwrk/midnight-js-level-pri
 import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
 import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
 import { randomBytes } from '../../api/src/utils/index.js';
-import { deployContract } from '@midnight-ntwrk/midnight-js-contracts';
+import { deployContract, DeployedContract, ContractProviders } from '@midnight-ntwrk/midnight-js-contracts';
 import { CompiledContract } from '@midnight-ntwrk/midnight-js-protocol/compact-js';
 import path from 'path';
 
@@ -30,10 +31,13 @@ export class TripVerifyService {
   constructor(
     private deployedContract: any,
     private providers: any,
-    private logger: any
-  ) { }
+    private logger: any,
+  ) {}
 
-  async verifyTrip(tripIdBytes: Uint8Array, safetyConditionsMet: boolean): Promise<{ success: boolean; txHash?: string; error?: string }> {
+  async verifyTrip(
+    tripIdBytes: Uint8Array,
+    safetyConditionsMet: boolean,
+  ): Promise<{ success: boolean; txHash?: string; error?: string }> {
     try {
       // Check current state. If VERIFIED, we must reset first to allow a new verify call.
       const contractAddress = this.deployedContract.deployTxData.public.contractAddress;
@@ -64,29 +68,35 @@ export class TripVerifyService {
 }
 
 export class FallbackTripVerifyService {
-  constructor(private logger: any) { }
+  constructor(private logger: Logger) {}
 
-  async verifyTrip(_tripIdBytes: Uint8Array, safetyConditionsMet: boolean): Promise<{ success: boolean; txHash?: string; error?: string }> {
+  async verifyTrip(
+    _tripIdBytes: Uint8Array,
+    safetyConditionsMet: boolean,
+  ): Promise<{ success: boolean; txHash?: string; error?: string }> {
     if (safetyConditionsMet) {
       const bytes = new Uint8Array(32);
       for (let i = 0; i < 32; i++) bytes[i] = Math.floor(Math.random() * 256);
-      const randomHex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+      const randomHex = Array.from(bytes)
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join('');
       return {
         success: true,
-        txHash: randomHex
+        txHash: randomHex,
       };
     } else {
       return {
         success: false,
-        error: "Unexpected error executing scoped transaction '<unnamed>': Error: failed assert: Safety conditions not met, cannot verify trip"
+        error:
+          "Unexpected error executing scoped transaction '<unnamed>': Error: failed assert: Safety conditions not met, cannot verify trip",
       };
     }
   }
 }
 
-let cachedServicePromise: Promise<any> | null = null;
+let cachedServicePromise: Promise<TripVerifyService | FallbackTripVerifyService> | null = null;
 
-export async function initTripVerifyService(): Promise<any> {
+export async function initTripVerifyService(): Promise<TripVerifyService | FallbackTripVerifyService> {
   if (cachedServicePromise) return cachedServicePromise;
 
   cachedServicePromise = (async () => {
@@ -103,12 +113,10 @@ export async function initTripVerifyService(): Promise<any> {
     // We expect the script to be run from the bboard-cli directory
     const assetsPath = path.resolve(process.cwd(), '../contract/src/managed/tripverify');
 
-    const CompiledTripVerifyContract = CompiledContract.make<
-      TripVerify.Contract<TripVerifyPrivateState>
-    >("TripVerify", TripVerify.Contract<TripVerifyPrivateState> as any).pipe(
-      CompiledContract.withWitnesses(witnesses as any),
-      CompiledContract.withCompiledFileAssets(assetsPath)
-    );
+    const CompiledTripVerifyContract = CompiledContract.make<TripVerify.Contract<TripVerifyPrivateState>>(
+      'TripVerify',
+      TripVerify.Contract<TripVerifyPrivateState> as any,
+    ).pipe(CompiledContract.withWitnesses(witnesses as any), CompiledContract.withCompiledFileAssets(assetsPath));
 
     let envConfiguration;
     try {

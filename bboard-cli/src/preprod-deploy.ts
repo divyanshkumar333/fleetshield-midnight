@@ -47,7 +47,7 @@ const witnesses = {
   safetyConditionsMet: ({ privateState }: any) => [privateState, privateState.safetyConditionsMet],
 };
 
-const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /**
  * Poll for balance using a fresh short-lived wallet each attempt.
@@ -67,25 +67,29 @@ async function pollBalance(seed: string, logger: any, maxAttempts = 120, interva
       walletInit = true;
       await provider.start();
       connectionStatus = 'connected';
-      await new Promise(resolve => setTimeout(resolve, 5000));
-      const state = await import('rxjs').then(Rx => Rx.firstValueFrom(provider!.wallet.unshielded.state));
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+      const state = await import('rxjs').then((Rx) => Rx.firstValueFrom(provider!.wallet.unshielded.state));
       balance = state.balances[unshieldedToken().raw] ?? 0n;
       connectionStatus = 'ok';
     } catch (e: any) {
       connectionStatus = `error: ${e.message}`;
     } finally {
-      try { await provider?.stop(); } catch (_) {}
+      try {
+        await provider?.stop();
+      } catch (_) {}
     }
 
     // Structured per-attempt record
-    console.log(JSON.stringify({
-      attempt: `${i}/${maxAttempts}`,
-      timestamp: ts,
-      elapsed_s: elapsed,
-      wallet_initialized: walletInit,
-      balance_tNight: balance.toString(),
-      connection_status: connectionStatus,
-    }));
+    console.log(
+      JSON.stringify({
+        attempt: `${i}/${maxAttempts}`,
+        timestamp: ts,
+        elapsed_s: elapsed,
+        wallet_initialized: walletInit,
+        balance_tNight: balance.toString(),
+        connection_status: connectionStatus,
+      }),
+    );
 
     if (balance > 0n) return balance;
 
@@ -132,12 +136,10 @@ async function main() {
     midnightProvider: walletProvider,
   };
 
-  const CompiledTripVerifyContract = CompiledContract.make<
-    TripVerify.Contract<TripVerifyPrivateState>
-  >('TripVerify', TripVerify.Contract<TripVerifyPrivateState> as any).pipe(
-    CompiledContract.withWitnesses(witnesses as any),
-    CompiledContract.withCompiledFileAssets(assetsPath),
-  );
+  const CompiledTripVerifyContract = CompiledContract.make<TripVerify.Contract<TripVerifyPrivateState>>(
+    'TripVerify',
+    TripVerify.Contract<TripVerifyPrivateState> as any,
+  ).pipe(CompiledContract.withWitnesses(witnesses as any), CompiledContract.withCompiledFileAssets(assetsPath));
 
   // ---- 3. DEPLOY ----
   logger.info('Deploying tripverify contract to PreProd...');
@@ -155,9 +157,11 @@ async function main() {
   // ---- 4. VALID VERIFICATION ----
   logger.info('Running VALID verification (safetyConditionsMet=true)...');
   const tripIdValid = new Uint8Array(32);
-  new TextEncoder().encode('trip-valid-001').forEach((b, i) => { tripIdValid[i] = b; });
+  new TextEncoder().encode('trip-valid-001').forEach((b, i) => {
+    tripIdValid[i] = b;
+  });
 
-  const curState = await privateStateProvider.get(PRIVATE_STATE_KEY) as TripVerifyPrivateState;
+  const curState = (await privateStateProvider.get(PRIVATE_STATE_KEY)) as TripVerifyPrivateState;
   await privateStateProvider.set(PRIVATE_STATE_KEY, { ...curState, safetyConditionsMet: true });
 
   const validTx = await deployedContract.callTx.verifyTripCompliance(tripIdValid);
@@ -171,9 +175,11 @@ async function main() {
   // ---- 6. INVALID VERIFICATION ----
   logger.info('Running INVALID verification (safetyConditionsMet=false)...');
   const tripIdInvalid = new Uint8Array(32);
-  new TextEncoder().encode('trip-invalid-001').forEach((b, i) => { tripIdInvalid[i] = b; });
+  new TextEncoder().encode('trip-invalid-001').forEach((b, i) => {
+    tripIdInvalid[i] = b;
+  });
 
-  const curState2 = await privateStateProvider.get(PRIVATE_STATE_KEY) as TripVerifyPrivateState;
+  const curState2 = (await privateStateProvider.get(PRIVATE_STATE_KEY)) as TripVerifyPrivateState;
   await privateStateProvider.set(PRIVATE_STATE_KEY, { ...curState2, safetyConditionsMet: false });
 
   let invalidResult: string;
@@ -197,7 +203,7 @@ async function main() {
   process.exit(0);
 }
 
-main().catch(e => {
+main().catch((e) => {
   console.error('Fatal error:', e.message ?? e);
   process.exit(1);
 });

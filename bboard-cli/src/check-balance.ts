@@ -26,24 +26,28 @@ async function main() {
   try {
     provider = await MidnightWalletProvider.build(logger, PREPROD_ENV, seed);
     await provider.start();
-    
+
     logger.info('Wallet provider started. Grabbing latest state after 5s...');
-    await new Promise(resolve => setTimeout(resolve, 5000));
-    const walletState = await import('rxjs').then(Rx => Rx.firstValueFrom(provider!.wallet.state()));
-    
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+    const walletState = await import('rxjs').then((Rx) => Rx.firstValueFrom(provider!.wallet.state()));
+
     const unshieldedBalance = walletState.unshielded.balances[unshieldedToken().raw] ?? 0n;
-    
+
     console.log(`\nAddress: ${walletState.unshielded.address}`);
     console.log(`Unshielded Balance: ${unshieldedBalance.toString()} tNIGHT (raw)`);
-    console.log(`Shielded Balance:   ${(walletState.shielded.balances[unshieldedToken().raw] ?? 0n).toString()} tNIGHT (raw)`);
+    console.log(
+      `Shielded Balance:   ${(walletState.shielded.balances[unshieldedToken().raw] ?? 0n).toString()} tNIGHT (raw)`,
+    );
   } catch (error) {
     logger.error(`Error during balance check: ${error}`);
   } finally {
-    try { await provider?.stop(); } catch (_) {}
+    try {
+      await provider?.stop();
+    } catch (_) {}
   }
 }
 
-main().catch(e => {
+main().catch((e) => {
   console.log(`ERROR:${e.message}`);
   process.exit(1);
 });

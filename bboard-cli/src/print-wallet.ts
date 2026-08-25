@@ -22,17 +22,17 @@ setNetworkId('preprod');
 async function main() {
   const seed = process.env.WALLET_SEED || '16d62efdf587cbb94ce2525b4639b52cbf9a81211507b20e281c4e8162f081cd';
   const provider = await MidnightWalletProvider.build(logger, envConfig, seed);
-  
+
   const initialState = await getInitialUnshieldedState(logger, provider.wallet.unshielded);
   const unshieldedAddress = UnshieldedAddress.codec.encode(getNetworkId(), initialState.address);
-  
+
   console.log('\n\n--- PREPROD UNSHIELDED WALLET ADDRESS (FOR FAUCET) BELOW ---');
   console.log(unshieldedAddress.toString());
   console.log('-------------------------------------------------------------\n\n');
   process.exit(0);
 }
 
-main().catch(e => {
+main().catch((e) => {
   console.error(e);
   process.exit(1);
 });

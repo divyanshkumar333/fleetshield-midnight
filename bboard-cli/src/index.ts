@@ -237,7 +237,8 @@ const mainLoop = async (providers: BBoardProviders, rli: Interface, logger: Logg
  * This seed gives access to tokens minted in the genesis block of a local development node - only
  * used in standalone networks to build a wallet with initial funds.
  */
-const GENESIS_MINT_WALLET_SEED = process.env.WALLET_SEED || '0000000000000000000000000000000000000000000000000000000000000001';
+const GENESIS_MINT_WALLET_SEED =
+  process.env.WALLET_SEED || '0000000000000000000000000000000000000000000000000000000000000001';
 
 /* **********************************************************************
  * buildWallet: unless running in a standalone (offline) mode,

@@ -65,10 +65,11 @@ export const generateDust = async (
     dustState.address,
   );
   const transaction = await walletFacade.finalizeRecipe(recipe);
-  let txId: any = null;
+  let txId: string | null = null;
   try {
     txId = await walletFacade.submitTransaction(transaction);
-  } catch (e: any) {
+  } catch (error: unknown) {
+    const e = error as Error;
     logger.warn(`Submit threw: ${e.message}. Continuing to wait for dust...`);
   }
 

@@ -24,14 +24,14 @@ async function main() {
   const provider = await MidnightWalletProvider.build(logger, PREPROD_ENV, seed);
   await provider.start();
   logger.info('Wallet provider started. Grabbing latest state after 5s...');
-  await new Promise(resolve => setTimeout(resolve, 5000));
-  
-  const walletState = await import('rxjs').then(Rx => Rx.firstValueFrom(provider.wallet.unshielded.state));
-  
+  await new Promise((resolve) => setTimeout(resolve, 5000));
+
+  const walletState = await import('rxjs').then((Rx) => Rx.firstValueFrom(provider.wallet.unshielded.state));
+
   logger.info('Generating DUST...');
   await generateDust(logger, seed, walletState, provider.wallet);
   logger.info('DUST generation complete.');
-  
+
   await provider.stop();
   process.exit(0);
 }

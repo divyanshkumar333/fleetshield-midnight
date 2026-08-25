@@ -32,17 +32,17 @@ async function main() {
 
   if (!seed) throw new Error('WALLET_SEED not found');
   let provider: MidnightWalletProvider | null = null;
-  
+
   try {
     console.log('--- 2. NETWORK ENDPOINTS ---');
     console.log(JSON.stringify(PREPROD_ENV, null, 2));
 
     provider = await MidnightWalletProvider.build(logger, PREPROD_ENV, seed);
     await provider.start();
-    
+
     const unshieldedState = await getInitialUnshieldedState(logger, provider.wallet.unshielded);
     const unshieldedAddrStr = UnshieldedAddress.codec.encode(getNetworkId(), unshieldedState.address).toString();
-    
+
     const shieldedState = await getInitialShieldedState(logger, provider.wallet.shielded);
     const shieldedAddrStr = shieldedState.address.coinPublicKeyString();
 
@@ -52,20 +52,22 @@ async function main() {
 
     console.log('\n--- 3. BALANCES (Including DUST) ---');
     await syncWallet(logger, provider.wallet, 2000);
-    
+
     const unshieldedBalance = unshieldedState.balances[unshieldedToken().raw] ?? 0n;
     console.log('Unshielded tNight:  ', unshieldedBalance.toString());
-    
+
     const state = await provider.wallet.state().toPromise();
     if (state) {
-        console.log('Dust Balance:       ', state.dust.balance(new Date(Date.now()))?.toString() ?? '0');
+      console.log('Dust Balance:       ', state.dust.balance(new Date(Date.now()))?.toString() ?? '0');
     }
   } catch (err: any) {
     console.error('--- CAUGHT ERROR ---');
     console.error(err);
   } finally {
-    try { await provider?.stop(); } catch (_) {}
+    try {
+      await provider?.stop();
+    } catch (_) {}
   }
 }
 
-main().catch(e => console.error('OUTER ERROR:', e));
+main().catch((e) => console.error('OUTER ERROR:', e));
