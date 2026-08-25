@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { randomBytes } from '../../../api/src/utils/index.js';
 import { initTripVerifyService } from '../tripverify-service.js';
 

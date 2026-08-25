@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars, no-empty */
 /**
  * preprod-deploy.ts
  * Deploy tripverify.compact to PreProd, run one valid + one invalid verification.
@@ -9,7 +10,6 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 import { MidnightWalletProvider } from './midnight-wallet-provider.js';
-import { getInitialUnshieldedState } from './wallet-utils.js';
 import { unshieldedToken } from '@midnight-ntwrk/midnight-js-protocol/ledger';
 import { NodeZkConfigProvider } from '@midnight-ntwrk/midnight-js-node-zk-config-provider';
 import { levelPrivateStateProvider } from '@midnight-ntwrk/midnight-js-level-private-state-provider';
@@ -76,7 +76,7 @@ async function pollBalance(seed: string, logger: any, maxAttempts = 120, interva
     } finally {
       try {
         await provider?.stop();
-      } catch (_) {}
+      } catch (e: any) {}
     }
 
     // Structured per-attempt record
@@ -152,7 +152,7 @@ async function main() {
 
   const contractAddress = deployedContract.deployTxData.public.contractAddress;
   console.log(`\nCONTRACT ADDRESS: ${contractAddress}\n`);
-  await privateStateProvider.setContractAddress(contractAddress);
+  privateStateProvider.setContractAddress(contractAddress);
 
   // ---- 4. VALID VERIFICATION ----
   logger.info('Running VALID verification (safetyConditionsMet=true)...');

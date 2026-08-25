@@ -1,4 +1,3 @@
-import { UnshieldedAddress } from '@midnight-ntwrk/wallet-sdk-address-format';
 import { setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 import { MidnightBech32m } from '@midnight-ntwrk/wallet-sdk-address-format';
 

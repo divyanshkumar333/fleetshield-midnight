@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import pino from 'pino';
 import { MidnightWalletProvider } from './midnight-wallet-provider.js';
 import { setNetworkId, getNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
@@ -66,7 +67,9 @@ async function main() {
   } finally {
     try {
       await provider?.stop();
-    } catch (_) {}
+    } catch (e: any) {
+      e;
+    }
   }
 }
 

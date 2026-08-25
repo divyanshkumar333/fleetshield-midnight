@@ -41,8 +41,9 @@ async function main() {
   const unshieldedKeystore = buildResult.keystore;
   const pubKeyHex = await unshieldedKeystore.getPublicKey();
   const pubKeyBytes = new Uint8Array(Buffer.from(pubKeyHex, 'hex'));
-  // @ts-expect-error - Needs untyped fallback
-  const unshieldedAddressStr = UnshieldedAddress.codec.encode(getNetworkId(), pubKeyBytes).toString();
+
+  const unshieldedAddressStr = // @ts-expect-error - Expected
+    UnshieldedAddress.codec.encode(getNetworkId(), pubKeyBytes).toString();
   console.log('Unshielded Address (Bech32):', unshieldedAddressStr);
   console.log('Shielded Address (Hex): ', shieldedAddress);
 }

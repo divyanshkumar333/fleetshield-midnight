@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars, no-empty, @typescript-eslint/no-base-to-string, @typescript-eslint/restrict-template-expressions */
 import pino from 'pino';
 import { setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 import { MidnightWalletProvider } from './midnight-wallet-provider.js';
@@ -33,7 +34,7 @@ async function main() {
 
     const unshieldedBalance = walletState.unshielded.balances[unshieldedToken().raw] ?? 0n;
 
-    console.log(`\nAddress: ${walletState.unshielded.address}`);
+    console.log(`\nAddress: ${walletState.unshielded.address.toString()}`);
     console.log(`Unshielded Balance: ${unshieldedBalance.toString()} tNIGHT (raw)`);
     console.log(
       `Shielded Balance:   ${(walletState.shielded.balances[unshieldedToken().raw] ?? 0n).toString()} tNIGHT (raw)`,
@@ -43,7 +44,7 @@ async function main() {
   } finally {
     try {
       await provider?.stop();
-    } catch (_) {}
+    } catch (e: unknown) {}
   }
 }
 

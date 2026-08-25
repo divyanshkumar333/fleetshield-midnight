@@ -98,7 +98,7 @@ export class PreviewTestEnvironment extends RemoteTestEnvironment {
         await new FaucetClient(config.faucet, this.logger).health();
       } catch (error) {
         this.logger.warn(
-          `Faucet health-check failed, but continuing. You may need to fund manually via the faucet website. Error: ${error}`,
+          `Faucet health-check failed, but continuing. You may need to fund manually via the faucet website. Error: ${String(error)}`,
         );
       }
     }
@@ -142,7 +142,7 @@ export class PreprodTestEnvironment extends RemoteTestEnvironment {
         await new FaucetClient(config.faucet, this.logger).health();
       } catch (error) {
         this.logger.warn(
-          `Faucet health-check failed, but continuing. You may need to fund manually via the faucet website. Error: ${error}`,
+          `Faucet health-check failed, but continuing. You may need to fund manually via the faucet website. Error: ${String(error)}`,
         );
       }
     }

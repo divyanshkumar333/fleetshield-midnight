@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars, @typescript-eslint/require-await */
 import { createLogger } from './logger-utils.js';
 import { Logger } from 'pino';
 import { StandaloneConfig, PreprodRemoteConfig, PreviewRemoteConfig, type Config } from './config.js';

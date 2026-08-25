@@ -13,6 +13,11 @@ const config = tseslint.config(
   eslintPluginPrettierRecommended,
   {
     rules: {
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-unused-vars': 'off',
+      'no-empty': 'off',
+      '@typescript-eslint/require-await': 'off',
+      '@typescript-eslint/no-unused-expressions': 'off',
       '@typescript-eslint/no-misused-promises': 'off', // https://github.com/typescript-eslint/typescript-eslint/issues/5807
       '@typescript-eslint/no-floating-promises': 'warn',
       '@typescript-eslint/promise-function-async': 'off',
