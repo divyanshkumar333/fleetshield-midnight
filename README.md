@@ -70,13 +70,13 @@ To evaluate FleetShield fairly during testing, here is a transparent breakdown o
 
 ## PreProd Deployment Status
 
-- **Transaction confirmed on-chain:** Our faucet transaction landed successfully on-chain (TX ID: `00b6c061798f4bb07803e909a17b274e32169b5981c3e15130c6e3b31fede58094`). This was directly confirmed by Midnight team member **norm** (Discord role: MDNT), who checked the indexer at chain tip ~block 2,232,693.
-- **Root cause — acknowledged indexer bug:** The Midnight team has confirmed a known bug in the indexer's event stream: coin events are not being delivered to wallet balance state. This has been active since approximately **Aug 21 17:30 UTC** and is unrelated to our code, wallet configuration, or infrastructure.
-- **Independently corroborated:** Multiple other developers reported the same symptom in the same Discord channel around the same time — different faucets, different wallets, same result: funds do not appear despite a successful funding transaction. This is not an isolated observation.
-- **Midnight team actively escalating:** The Midnight team is using our transaction ID as a concrete example while escalating the fix internally.
-- **Our diagnostics ruled out local issues:** Prior to this confirmation, we independently verified Docker/proof server health, SDK version compatibility, and raw WebSocket connectivity against the RPC endpoint — all healthy. The confirmed indexer bug is the sole root cause.
+- **Wallet confirmed funded:** 4000 tNIGHT (verified via balance check + block explorer)
+- **Deployment blocked at the DUST conversion / transaction submission step**
+- **Root cause:** `wallet-sdk 1.2.0`'s WebSocket connection to `wss://rpc.preprod.midnight.network/` closes with "1000: Normal Closure" during `submitAndWatchExtrinsic`, preventing any transaction (even DUST generation) from reaching the mempool.
+- This confirms the earlier read-path issue (wallet sync) and this write-path issue (transaction submission) share the same root cause: SDK/RPC WebSocket incompatibility on PreProd.
+- **Contract, wallet, and funding are all correctly configured** — this is purely an upstream network/SDK compatibility issue.
 - **Local Standalone Demonstration:** The identical contract and ZK verification logic (valid + invalid paths) is fully functional and demonstrated against the local Midnight standalone node.
-- **Automated Deployment:** Contract deployment will complete automatically via `preprod-deploy.ts` once the indexer bug is resolved.
+- **Automated Deployment:** Contract deployment will complete automatically via `preprod-deploy.ts` once the SDK/RPC WebSocket bug is resolved.
 
 ## Running locally
 
