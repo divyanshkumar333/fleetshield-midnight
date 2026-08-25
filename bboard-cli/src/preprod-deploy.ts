@@ -67,7 +67,8 @@ async function pollBalance(seed: string, logger: any, maxAttempts = 120, interva
       walletInit = true;
       await provider.start();
       connectionStatus = 'connected';
-      const state = await getInitialUnshieldedState(logger, provider.wallet.unshielded);
+      await new Promise(resolve => setTimeout(resolve, 5000));
+      const state = await import('rxjs').then(Rx => Rx.firstValueFrom(provider!.wallet.unshielded.state));
       balance = state.balances[unshieldedToken().raw] ?? 0n;
       connectionStatus = 'ok';
     } catch (e: any) {

@@ -46,7 +46,7 @@ export const generateDust = async (
   unshieldedState: UnshieldedWalletState,
   walletFacade: WalletFacade,
 ) => {
-  const dustState = await walletFacade.dust.waitForSyncedState();
+  const dustState = await rx.firstValueFrom(walletFacade.dust.state);
   const networkId = getNetworkId();
   const unshieldedKeystore = createKeystore(getUnshieldedSeed(walletSeed), networkId);
   const utxos = unshieldedState.availableCoins.filter((coin) => !coin.meta.registeredForDustGeneration);
@@ -65,15 +65,21 @@ export const generateDust = async (
     dustState.address,
   );
   const transaction = await walletFacade.finalizeRecipe(recipe);
-  const txId = await walletFacade.submitTransaction(transaction);
+  let txId: any = null;
+  try {
+    txId = await walletFacade.submitTransaction(transaction);
+  } catch (e: any) {
+    logger.warn(`Submit threw: ${e.message}. Continuing to wait for dust...`);
+  }
 
+  logger.info('Waiting for dust balance to become > 0...');
   const dustBalance = await rx.firstValueFrom(
     walletFacade.state().pipe(
       rx.filter((s) => s.dust.balance(new Date()) > 0n),
       rx.map((s) => s.dust.balance(new Date())),
     ),
   );
-  logger.info(`Dust generation transaction submitted with txId: ${txId}`);
+  logger.info(`Dust generation transaction submitted (or attempted)`);
   logger.info(`Receiver dust balance after generation: ${dustBalance}`);
 
   return txId;
