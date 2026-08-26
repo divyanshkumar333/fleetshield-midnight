@@ -4,8 +4,9 @@ import { initTripVerifyService } from '../src/tripverify-service.js';
 
 const app = express();
 const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 4000;
+const allowedOrigin = process.env.ALLOWED_ORIGIN || 'http://localhost:5173';
 
-app.use(cors());
+app.use(cors({ origin: allowedOrigin }));
 app.use(express.json());
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
