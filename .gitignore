@@ -37,8 +37,9 @@ jspm_packages/
 # Yarn Integrity file
 .yarn-integrity
 
-# dotenv environment variables file
+# dotenv environment variables file — never commit secrets
 .env
+**/.env
 
 # MacOS
 .DS_Store
@@ -60,10 +61,12 @@ jspm_packages/
 # Compact
 managed/
 
+# Sensitive files
 .claude
 .midnight-expert*seed*.txt
 *private-key*
 *.pem
 
+# Build artifacts that shouldn't be tracked per workspace
 dashboard/node_modules/
 dashboard/dist/
