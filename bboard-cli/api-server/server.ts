@@ -4,9 +4,23 @@ import { initTripVerifyService } from '../src/tripverify-service.js';
 
 const app = express();
 const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 4000;
-const allowedOrigin = process.env.ALLOWED_ORIGIN || 'http://localhost:5173';
+const allowedOrigin = process.env.ALLOWED_ORIGIN;
 
-app.use(cors({ origin: allowedOrigin }));
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!allowedOrigin) {
+        // In local dev, allow localhost, 127.0.0.1, or non-browser requests
+        if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1')) {
+          return callback(null, true);
+        }
+      } else if (origin === allowedOrigin || !origin) {
+        return callback(null, true);
+      }
+      callback(new Error(`Not allowed by CORS: ${origin}`));
+    },
+  }),
+);
 app.use(express.json());
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
