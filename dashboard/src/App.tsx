@@ -1762,7 +1762,7 @@ const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:400
                 <h1 className="workspace-title">Compliance & ZK Verification Center</h1>
                 <div className="workspace-desc">Zero-knowledge proof evaluator powered by Midnight smart contracts</div>
               </div>
-              <span className="chip chip-live">LIVE MIDNIGHT ZK</span>
+              <span className="chip chip-live">LIVE MIDNIGHT ZK (LOCAL / STANDALONE DEMO)</span>
             </div>
 
             <div className="glass-panel">

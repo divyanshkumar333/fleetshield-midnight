@@ -606,7 +606,7 @@ export default function OperationsMap({
         <div className="om-topbar-l">
           <span className="om-simtime">{simulationTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
           <div className="om-chip-sim">SIMULATION</div>
-          <div className="om-chip-live"><div className="om-live-dot" />MIDNIGHT ZK</div>
+          <div className="om-chip-live"><div className="om-live-dot" />MIDNIGHT ZK (STANDALONE DEMO)</div>
         </div>
         <div className="om-topbar-r">
           <span>{driverLocations.filter(d => d.driverStatus === 'DRIVING').length} driving</span>
