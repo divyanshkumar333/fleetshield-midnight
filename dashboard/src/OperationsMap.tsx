@@ -402,10 +402,21 @@ export default function OperationsMap({
     map.fitBounds(bounds.pad(0.12), { animate: true, duration: 0.7 });
   };
 
+  // Map tile configuration:
+  // - Satellite: Esri World Imagery (no key required)
+  // - Dark (default): CARTO dark basemap with optional API key via VITE_CARTO_API_KEY
+  //   Falls back to OpenStreetMap-based Stadia Alidade Smooth Dark (no key required)
+  const cartoKey = import.meta.env.VITE_CARTO_API_KEY as string | undefined;
   const tileUrl = satellite
     ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
-    : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-  const tileAttrib = satellite ? '&copy; Esri' : '&copy; <a href="https://carto.com/">CARTO</a>';
+    : cartoKey
+      ? `https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?api_key=${cartoKey}`
+      : 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png';
+  const tileAttrib = satellite
+    ? '&copy; Esri'
+    : cartoKey
+      ? '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>'
+      : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://stadiamaps.com/">Stadia Maps</a>';
 
   return (
     <div className="om-root">
