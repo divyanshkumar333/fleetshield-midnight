@@ -54,13 +54,15 @@ app.post('/verify-trip', async (req, res) => {
   }
 });
 
-// Initialize the Midnight environment right at startup
+// Initialize the Midnight environment in the background
 console.log('Starting Midnight test environment (this may take 1-2 minutes)...');
+app.listen(port, () => {
+  console.log(`API Server listening at http://localhost:${port}`);
+  console.log(`Waiting for Midnight environment to be ready...`);
+});
+
 initTripVerifyService().then(() => {
-  app.listen(port, () => {
-    console.log(`API Server listening at http://localhost:${port}`);
-    console.log(`Ready to verify trips.`);
-  });
+  console.log(`Ready to verify trips.`);
 }).catch(err => {
   console.error('Failed to initialize trip verify service:', err);
   process.exit(1);

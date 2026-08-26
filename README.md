@@ -78,7 +78,25 @@ To evaluate FleetShield fairly during testing, here is a transparent breakdown o
 - **Local Standalone Demonstration:** The identical contract and ZK verification logic (valid + invalid paths) is fully functional and demonstrated against the local Midnight standalone node.
 - **Automated Deployment:** Contract deployment will complete automatically via `preprod-deploy.ts` once the SDK/RPC WebSocket bug is resolved.
 
-## Running locally
+## Running FleetShield locally
+
+```text
+1. Start Docker Desktop (required for the full Midnight standalone environment)
+2. Double-click start.bat  — or run it from a terminal
+3. FleetShield opens automatically at http://localhost:5173
+```
+
+`start.bat` handles everything:
+- Detects whether Docker is running (continues in fallback mode if not)
+- Frees ports 4000 and 5173 from any previous session
+- Opens the Backend API window (`bboard-cli › npm run start-api`)
+- Opens the Vite Dashboard window (`dashboard › npm run dev`)
+- Polls `/health` and port 5173 before opening the browser
+
+Run `STOP.bat` to shut down only FleetShield processes (ports 4000 and 5173).
+Unrelated Node and Docker processes are not touched.
+
+## Running manually
 
 ### Prerequisites
 - **Node.js:** v18 or newer
